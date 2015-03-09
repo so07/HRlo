@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+import datetime
+import calendar
+
+fmt_id       = "%Y%m%d"
+fmt_time     = "%H:%M:%S"
+fmt_day      = "%d/%m/%Y"
+fmt_weekday  = "%a"
+fmt_idtot    = fmt_id + fmt_time
+fmt_tot      = fmt_day + " " + fmt_time
+fmt_human    = fmt_day + " " + fmt_weekday
+fmt_humantot = fmt_day + " " + fmt_time + " " + fmt_weekday
+
+fmt_times = ["%H:%M:%S", "%H:%M", "%H.%M.%S", "%H%M%S", "%H.%M", "%H%M"]
+
+days_abbr = list(calendar.day_abbr)
+days_long = list(calendar.day_name)
+
+months_abbr = list(calendar.month_abbr)
+months_long = list(calendar.month_name)
+
+
+def date2day(dt, fmt = fmt_tot):
+   return dt.strptime( dt.strftime(fmt), fmt ) 
+
+
+def str2day(day):
+   for fmt in [fmt_idtot, fmt_id]:
+      try:
+         datetime.datetime.strptime(day, fmt)
+      except:
+         pass
+      else:
+         return date2day(datetime.datetime.strptime(day, fmt), fmt)
+         break
+
+def str2time(t):
+   for fmt in fmt_times:
+      try:
+         datetime.datetime.strptime(t, fmt)
+      except:
+         pass
+      else:
+         return date2day(datetime.datetime.strptime(t, fmt), fmt).time()
+         break
+
+def day_from_epoch (day):
+   epoch = datetime.datetime.utcfromtimestamp(0)
+   d = day - epoch
+   return d.days
+
+def sec_from_epoch (day):
+   epoch = datetime.datetime.utcfromtimestamp(0)
+   d = day - epoch
+   return d.total_seconds()
+
+
+class day_range:
+
+   def __init__ (self, start, end, step = datetime.timedelta(1)):
+      self.start = start
+      self.end   = end
+      self.step  = step
+
+   def __str__(self):
+      return "start : {}; end : {}".format(self.start, self.end)
+
+   def __iter__(self):
+      self.this_day = self.start
+      return self
+
+   def __next__(self):
+
+      this_day = self.this_day
+      next_day = this_day + self.step
+
+      if this_day > self.end:
+         raise StopIteration
+
+      self.this_day = next_day
+      return this_day
+
+   def start(self):
+      return self.start
+   def end(self):
+      return self.end
+   def step(self):
+      return self.step
+
+
+def week_bounds(day):
+   start = day.date() - datetime.timedelta(days = day.weekday())
+   end = start + datetime.timedelta(days = 6)
+   return start, end
+
+def month_bounds(day):
+   last_day_month = calendar.monthrange(day.year, day.month)[1]
+   start = datetime.date(day.year, day.month, 1)
+   end   = datetime.date(day.year, day.month, last_day_month)
+   return start, end
+
+def is_same_month(date1, date2):
+   if (date1.year == date2.year) and (date1.month == date2.month) :
+      return True
+   else:
+      return False
+
+def sec2str(seconds):
+   m, s = divmod(abs(seconds), 60)
+   h, m = divmod(abs(m), 60)
+
+   r = ''
+   if seconds < 0:
+      r += '-'
+   r += "%02d:%02d:%02d" % (h, m, s)
+   return r
+
+
+def main():
+
+   day1 = datetime.datetime(2015, 1, 1)
+   day2 = datetime.datetime(2015, 1, 12)
+
+   x = day_range( day1, day2, datetime.timedelta(1) )
+
+   print (x)
+
+   for i in x:
+      print(i)
+
+   print( "week buonds", week_bounds(day1) )
+   print( "month buonds", month_bounds(day1) )
+
+   print( "is same month ?", is_same_month(day1, day2) )
+
+   t = datetime.timedelta(seconds=2876324)
+
+   print( "sec2str", sec2str(t.total_seconds()) )
+
+if __name__ == '__main__':
+   main()

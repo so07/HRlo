@@ -13,10 +13,13 @@ import HRdayList
 
 class HRlo(object):
 
-   def __init__(self, auth):
+   def __init__(self, auth, config = {}):
        hrget  = HRget.HRget(auth)
        fields, HRdata = hrget.get()
        self.data = [ HRday.HRday(fields, day) for day in HRdata]
+
+       self.config = {}
+       self.config.update( config )
 
        anomalies = self.anomalies()
        if anomalies:
@@ -53,6 +56,7 @@ class HRlo(object):
 
        l = HRdayList.HRdayList(label=label)
        for i in self[start:end]:
+           if i.is_today() and not self.config.get('today', True): continue
            l.append(i)
        return l
 
@@ -64,6 +68,7 @@ class HRlo(object):
 
        l = HRdayList.HRdayList(label=label)
        for i in self[start:end]:
+           if i.is_today() and not self.config.get('today', True): continue
            l.append(i)
        return l
 
@@ -104,7 +109,7 @@ def main():
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
                                     description='',
-                                    #formatter_class=argparse.ArgumentDefaultsHelpFormatter
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter
                                    )
 
 
@@ -122,6 +127,10 @@ def main():
                             action='store_true',
                             help='Monthly report')
 
+   parser_todo.add_argument('--no-today',
+                            action='store_true',
+                            help='Keep out today from reports')
+
    dauth = HRauth.add_parser(parser)
 
    args = parser.parse_args()
@@ -130,7 +139,9 @@ def main():
 
    auth = HRauth.HRauth(**dauth)
 
-   hr = HRlo(auth)
+   config = {'today' : not args.no_today}
+
+   hr = HRlo(auth, config)
 
    if args.daily:
       print(hr.get_report_day())

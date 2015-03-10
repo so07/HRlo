@@ -3,6 +3,7 @@ import re
 import datetime
 
 #import dayutils
+from . import dayutils
 
 def pairwise(l):
    iterator = iter(l)

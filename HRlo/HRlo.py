@@ -122,17 +122,13 @@ def main():
                             action='store_true',
                             help='Monthly report')
 
-   HRauth.add_parser(parser)
+   dauth = HRauth.add_parser(parser)
 
    args = parser.parse_args()
 
-   args.password = getpass.getpass()
-
-   dargs = vars(args)
-
    #print(args)
 
-   auth = HRauth.HRauth(dargs['host'], dargs['username'], dargs['idemploy'], dargs['password'])
+   auth = HRauth.HRauth(**dauth)
 
    hr = HRlo(auth)
 

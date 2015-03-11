@@ -11,7 +11,7 @@ fmt_tot      = fmt_day + " " + fmt_time
 fmt_human    = fmt_day + " " + fmt_weekday
 fmt_humantot = fmt_day + " " + fmt_time + " " + fmt_weekday
 
-fmt_times = ["%H:%M:%S", "%H:%M", "%H.%M.%S", "%H%M%S", "%H.%M", "%H%M"]
+fmt_times = ["%H:%M:%S", "%H:%M", "%H.%M.%S", "%H%M%S", "%H.%M"]
 
 days_abbr = list(calendar.day_abbr)
 days_long = list(calendar.day_name)

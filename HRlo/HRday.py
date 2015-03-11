@@ -31,8 +31,10 @@ class HRday(DayLog):
         date = datetime.datetime.strptime(self.HR['DATA'], "%Y-%m-%d")
         logs = self.re_logs.findall( self.HR['TIMBRATURE'] )
 
+        logs = [ i[0:2] + ':' + i[2:4] for i in logs ]
+
         if date.date() == self._now.date() and len(logs)%2:
-           logs.append( self._now.strftime('%H%M') )
+            logs.append( self._now.strftime('%H:%M') )
 
         DayLog.__init__(self, date, logs)
 
@@ -137,12 +139,29 @@ class HRday(DayLog):
 
 def debug():
 
+    import argparse
+    import HRget, HRauth
+
+    parser = argparse.ArgumentParser(prog='HRday',
+                                     description='',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    HRauth.add_parser(parser)
+
+    args = parser.parse_args()
+
+    auth = HRauth.HRauth(**vars(args))
+    h = HRget.HRget(auth, verbose=False)
+
+    f, d = h.get( day=datetime.datetime.today().day )
+    #print(d)
+
+    d1 = HRday(f, d)
+    print(d1)
+
     #d = HRday()
     #print(d)
 
-    import HRget, HRauth
-    a = HRauth.HRauth()
-    h = HRget.HRget(a, verbose=False)
     #f, d = h.get(day=3)
     #print(d)
     #d = HRday(f, d)

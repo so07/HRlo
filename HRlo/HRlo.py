@@ -50,13 +50,14 @@ class HRlo(object):
        return d
 
    def get_report_week(self, day = datetime.datetime.today()):
+
        start, end = dayutils.week_bounds(day)
 
        label = "Weekly report : From " + str(start) + " To " + str(end)
 
        l = HRdayList.HRdayList(label=label)
        for i in self[start:end]:
-           if i.is_today() and not self.config.get('today', True): continue
+           if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
        return l
 
@@ -68,7 +69,7 @@ class HRlo(object):
 
        l = HRdayList.HRdayList(label=label)
        for i in self[start:end]:
-           if i.is_today() and not self.config.get('today', True): continue
+           if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
        return l
 
@@ -127,9 +128,9 @@ def main():
                             action='store_true',
                             help='Monthly report')
 
-   parser_todo.add_argument('--no-today',
+   parser_todo.add_argument('-t', '--today',
                             action='store_true',
-                            help='Keep out today from reports')
+                            help='Keep today in reports')
 
    dauth = HRauth.add_parser(parser)
 
@@ -139,7 +140,9 @@ def main():
 
    auth = HRauth.HRauth(**dauth)
 
-   config = {'today' : not args.no_today}
+   config = {'today' : args.today}
+
+   #config = {}
 
    hr = HRlo(auth, config)
 

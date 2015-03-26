@@ -12,9 +12,13 @@ class HRday(DayLog):
     re_logs = re.compile('(\d+)-')
 
     HR_workday      = datetime.timedelta(hours= 7, minutes=12)
+
     HR_login_last   = datetime.timedelta(hours=10, minutes= 0)
-    HR_launch_start = datetime.timedelta(hours=12, minutes= 0)
-    HR_launch_end   = datetime.timedelta(hours=15, minutes= 0)
+
+    # lunch timings
+    HR_lunch_start = datetime.timedelta(hours=12, minutes= 0)
+    HR_lunch_end   = datetime.timedelta(hours=15, minutes= 0)
+    HR_lunch_time  = datetime.timedelta(hours=30, minutes= 0)
 
     def __init__(self, field = None, data = None, label = None):
 
@@ -41,7 +45,6 @@ class HRday(DayLog):
         self._anomaly = int(self.HR['ANOMALIE'])
 
         self._timenet = self._get_timenet()
-
 
 
     def __str__ (self):
@@ -73,6 +76,12 @@ class HRday(DayLog):
           s += "{}\n".format( str(self.exit().strftime("%H:%M")) )
 
        return s
+
+    def _unit_hr2seconds(self, hrtime):
+        # convert to second
+        return hrtime *60.0*60.0
+    def _unit_hr2timedelta(self, hrtime):
+        return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
 
     def __repr__(self):
        return str(self._date.date())
@@ -139,6 +148,22 @@ class HRday(DayLog):
 
 def debug():
 
+    f = []
+    d = []
+    with open('file', 'r') as fp:
+       for line in fp:
+          lf, ld = line.strip().split('=')
+          print( lf, ld )
+          f.append(lf.strip(' '))
+          d.append(ld.strip(' '))
+    #print(data)
+    day = HRday(f, d)
+
+    print(day)
+    #sys.exit()
+
+def main():
+
     import argparse
     import HRget, HRauth
 
@@ -151,40 +176,20 @@ def debug():
     args = parser.parse_args()
 
     auth = HRauth.HRauth(**vars(args))
+
     h = HRget.HRget(auth, verbose=False)
 
-    f, d = h.get( day=datetime.datetime.today().day )
+    f, d = h.get(day=10)
+    f, d = h.get(day=24, month=2)
+
+    #for i, j in zip(f, d):
+    #    print(i, j)
     #print(d)
 
-    d1 = HRday(f, d)
-    print(d1)
-
-    #d = HRday()
-    #print(d)
-
-    #f, d = h.get(day=3)
-    #print(d)
-    #d = HRday(f, d)
-    #print("uptime", d.uptime())
-    #print("logs", d.logs("%H:%M"))
-    #print("uptimes", d.uptimes("%H:%M"))
-    #print("today?", d.is_today())
-
-    #f, d = h.get(day=9)
-    #d = HRday(f, d)
-    #print(d)
-
-    f, d = h.get(day=3)
-    d1 = HRday( f, d )
-    print(d1)
-
-    f, d = h.get(day=4)
     d2 = HRday( f, d )
     print(d2)
 
-    s = d1+d2
-    print(s)
-
 
 if __name__ == '__main__':
-    debug()
+    #debug()
+    main()

@@ -133,6 +133,7 @@ class HRget(object):
         # }}}
 
         p = self.session.post(self.sheet_url, cookies=cookies)
+
         p = self.session.post(self.post_url, headers=headers, cookies=cookies, params=params)
 
         d = p.json()['Data'][:last_day]
@@ -145,21 +146,35 @@ class HRget(object):
             print ('>>>FIELDS>>>', f)
             print ('>>>DATA>>>', d)
 
+            for i, item in enumerate(f):
+                print( item, ' = ', d[i])
+
         return f, d
 
 
-def debug ():
+def main ():
 
+    import argparse
     import HRauth
 
-    a = HRauth.HRauth()
-    h = HRget(a, verbose=True)
+    parser = argparse.ArgumentParser(prog='HRget',
+                                     description='',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    HRauth.add_parser(parser)
+
+    args = parser.parse_args()
+
+    auth = HRauth.HRauth(**vars(args))
+
+    h = HRget(auth, verbose=True)
 
     #f, d = h.get()
-    f, d = h.get(day=2)
     #f, d = h.get(2015, 3, 3)
-    f, d = h.get(month=2)
+    #f, d = h.get(month=2)
+    f, d = h.get(day=2)
+    print(d)
 
 
 if __name__ == '__main__':
-    debug()
+    main()

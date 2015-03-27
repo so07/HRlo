@@ -162,6 +162,8 @@ def debug():
     print(day)
     #sys.exit()
 
+
+
 def main():
 
     import argparse
@@ -171,23 +173,25 @@ def main():
                                      description='',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    HRget.add_parser(parser)
+
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
+
 
     auth = HRauth.HRauth(**vars(args))
 
     h = HRget.HRget(auth, verbose=False)
 
-    f, d = h.get(day=10)
-    f, d = h.get(day=24, month=2)
+    f, d = h.get(year=args.year, month=args.month, day=args.day)
 
     #for i, j in zip(f, d):
     #    print(i, j)
     #print(d)
 
-    d2 = HRday( f, d )
-    print(d2)
+    day = HRday( f, d )
+    print(day)
 
 
 if __name__ == '__main__':

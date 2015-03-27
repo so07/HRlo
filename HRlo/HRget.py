@@ -152,6 +152,23 @@ class HRget(object):
         return f, d
 
 
+def add_parser(parser):
+
+   date_parser = parser.add_argument_group('Date options')
+
+   date_parser.add_argument('-d', '--day',
+                            default = datetime.datetime.today().day,
+                            help='select day')
+
+   date_parser.add_argument('-m', '--month',
+                            default = datetime.datetime.today().month,
+                            help='select month')
+
+   date_parser.add_argument('-y', '--year',
+                            default = datetime.datetime.today().year,
+                            help='select year')
+
+
 def main ():
 
     import argparse
@@ -161,18 +178,19 @@ def main ():
                                      description='',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    add_parser(parser)
+
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
+
 
     auth = HRauth.HRauth(**vars(args))
 
     h = HRget(auth, verbose=True)
 
-    #f, d = h.get()
-    #f, d = h.get(2015, 3, 3)
-    #f, d = h.get(month=2)
-    f, d = h.get(day=2)
+    f, d = h.get(year=args.year, month=args.month, day=args.day)
+
     print(d)
 
 

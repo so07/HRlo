@@ -1,13 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import re
 import os
 import sys
 
 import getpass
+import base64
+
 try:
    from configparser import SafeConfigParser
 except:
    from ConfigParser import SafeConfigParser
+
 
 class HRauth(dict):
 
@@ -20,16 +23,51 @@ class HRauth(dict):
       self['required'] = ['host', 'username', 'idemploy']
 
       # read from config_file
-      self._read_config_file(kwargs['config_file'])
+      self.update( self._read_config_file(kwargs['config_file']) )
       # read from args
       self.update( {k: kwargs[k] for k in self['required'] if kwargs.get(k, None)} )
+
+      self._get_password()
 
       if self['save']:
          self._write_config_file(self['config_file'])
 
-      self['password'] = getpass.getpass()
-
       self._check_required()
+
+
+   def _get_password(self):
+
+      if self.get('password', False):
+         self['password'] = self._password_decode()
+      else:
+         self['password'] = getpass.getpass()
+
+
+   def _password_decode(self):
+      """Decode password"""
+
+      _enc  = self['password_encoding']
+      _pass = self['password']
+
+      if   _enc == 'clear':
+         _pass = _pass
+      elif _enc == 'base64':
+         _pass = base64.b64decode(_pass)
+
+      return _pass
+
+   def _password_encode(self):
+      """Encode password"""
+
+      _enc  = self['password_encoding']
+      _pass = self['password']
+
+      if   _enc == 'clear':
+         _pass = self['password']
+      elif _enc == 'base64':
+         _pass = base64.b64encode(_pass)
+
+      return _pass
 
    def _check_required(self):
       missing = []
@@ -45,6 +83,7 @@ class HRauth(dict):
 
 
    def _read_config_file(self, fname):
+      """Read from config file"""
 
       if not os.path.isfile(fname):
          return
@@ -52,7 +91,7 @@ class HRauth(dict):
       parser = SafeConfigParser()
       parser.read(fname)
 
-      self.update( {k: parser.get(self.HRauth_config_option, k) for k in parser.options(self.HRauth_config_option)} )
+      return {k: parser.get(self.HRauth_config_option, k) for k in parser.options(self.HRauth_config_option)}
 
 
    def _write_config_file(self, fname):
@@ -66,6 +105,11 @@ class HRauth(dict):
           parser.set(self.HRauth_config_option, 'username', self['username'])
        if self.get('idemploy', None):
           parser.set(self.HRauth_config_option, 'idemploy', str(self['idemploy']))
+
+       if self['save_password']:
+          _encoded = self._password_encode()
+          parser.set(self.HRauth_config_option, 'password', _encoded)
+
 
        with open(fname, "w") as f:
           parser.write(f)
@@ -102,6 +146,14 @@ def add_parser(parser):
    authparser.add_argument('-s', '--save',
                            action='store_true',
                            help='Save HR authentication options in HRauth config file')
+
+   authparser.add_argument('--save-password',
+                           action='store_true',
+                           help='Save HR authentication password in HRauth config file')
+
+   authparser.add_argument('--password-encoding',
+                           choices=['clear', 'base64'], default='base64',
+                           help='Password encoding')
 
    args = parser.parse_args()
    return vars(args)

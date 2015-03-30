@@ -140,6 +140,7 @@ class HRget(object):
         f = p.json()['Fields']
 
         if day:
+            print(day)
             d = d[day-1]
         
         if self.verbose:
@@ -157,15 +158,15 @@ def add_parser(parser):
    date_parser = parser.add_argument_group('Date options')
 
    date_parser.add_argument('-d', '--day',
-                            default = datetime.datetime.today().day,
+                            default = datetime.datetime.today().day, type=int,
                             help='select day')
 
    date_parser.add_argument('-m', '--month',
-                            default = datetime.datetime.today().month,
+                            default = datetime.datetime.today().month, type=int,
                             help='select month')
 
    date_parser.add_argument('-y', '--year',
-                            default = datetime.datetime.today().year,
+                            default = datetime.datetime.today().year, type=int,
                             help='select year')
 
 

@@ -25,6 +25,16 @@ class HRday(DayLog):
         self._now = datetime.datetime.today()
         self.label = label
 
+        self._timenet = 0
+        self._anomaly = 0
+
+        self._hr_working_time = 0
+        self._lunch = 0
+        self._mission = 0
+
+        self._hr_uptime = datetime.timedelta(0)
+        self._hr_timenet = 0
+
         DayLog.__init__(self)
 
         if not field and not data:
@@ -46,10 +56,45 @@ class HRday(DayLog):
 
         self._timenet = self._get_timenet()
 
+        #
+
+        self._hr_working_time = self._get_hr_working_time()
+        self._hr_uptime, self._hr_timenet = self._get_hr_times()
+
+        sep = '&&&'
+        # read from DESCRIZIONE1 field
+        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
+
+            # from ORE
+            if 'ORE' in k:
+               if 'ECCEDENTI' in k:
+                  #self._hr_timenet += self._unit_hr2seconds( float(v) )
+                  pass
+               if 'MANCANTI' in k:
+                  #self._hr_timenet -= self._unit_hr2seconds( float(v) )
+                  pass
+               if 'KO' in k:
+                  # time for lunch (to subtract from uptime)
+                  pass
+
+            # from IND.
+            if 'IND' in k:
+               if 'MENSA' in k:
+                  self._lunch = int(float(v))
+               if 'DI MISSIONE' in k:
+                  self._mission = int(float(v))
+
+            # from MISSION (not with IND.)
+            if 'MISSIONE' in k and not 'IND' in k:
+               pass
+
+        # update for mission
+        pass
+
 
     def __str__ (self):
        s = ''
-       if not self._date or not self._logs:
+       if not self._date or not self.is_working():
            return s
        #s += DayLog.__str__(self) + '\n'
 
@@ -59,11 +104,21 @@ class HRday(DayLog):
        s += "{:.<20}".format( "Date" )
        s += "{}\n".format( str(self._date.date()) )
        s += "{:.<20}".format( "Uptime" )
-       s += "{}\n".format( dayutils.sec2str(self._uptime.total_seconds()) )
+       s += "{:<10}".format( dayutils.sec2str(self._uptime.total_seconds()) )
+       s += " {} ".format( "for HR" )
+       s += "{}\n".format( dayutils.sec2str(self._hr_uptime.total_seconds()) )
        s += "{:.<20}".format( "Timenet" )
-       s += "{}\n".format( dayutils.sec2str(self.timenet()) )
-       s += "{:.<20}".format( "TimeStamps" )
-       s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self._logs]) )
+       s += "{:<10}".format( dayutils.sec2str(self.timenet()) )
+       s += " {} ".format( "for HR" )
+       s += "{}\n".format( dayutils.sec2str(self._hr_timenet) )
+       s += "{:.<20}".format( "Lunch" )
+       s += "{}\n".format( self._lunch )
+       if self._logs:
+          s += "{:.<20}".format( "TimeStamps" )
+          s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self._logs]) )
+       if self.is_mission():
+          s += "{:.<20}".format( "Mission" )
+          s += "{}\n".format( self._mission )
        s += "{:.<20}".format( "Anomaly" )
        s += "{}\n".format( str(self.anomaly()) )
 
@@ -99,6 +154,14 @@ class HRday(DayLog):
        a._timenet = self._timenet + other._timenet
        a._anomaly = self._anomaly + other._anomaly
 
+       #
+
+       a._hr_working_time = self._hr_working_time + other._hr_working_time
+       a._lunch = self._lunch + other._lunch
+       a._mission = self._mission + other._mission
+       a._hr_uptime = self._hr_uptime + other._hr_uptime
+       a._hr_timenet = self._hr_timenet + other._hr_timenet
+
        return a
 
 
@@ -132,12 +195,43 @@ class HRday(DayLog):
        exc_sec = exc.total_seconds()
        return exc_sec
 
+    def _get_hr_working_time(self):
+       # read from DESCRORARIO to get working time for HR
+       _time_info = self.HR['DESCRORARIO'].split()
+       if 'SABATO' in _time_info or 'DOMENICA' in _time_info:
+          _time_sec = 0
+       else:
+          _time_type = _time_info[0]
+          _time_time = _time_info[1].split(':')
+          _time_sec  = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) ).total_seconds()
+       #print(_time_sec)
+       return _time_sec
+
+    def _get_hr_times(self):
+       _oreord = float(self.HR['OREORD'])
+       _oreecc = float(self.HR['OREECC'])
+       #print (_oreord, _oreecc)
+
+       _oreord_sec = self._unit_hr2seconds(_oreord)
+       _oreecc_sec = self._unit_hr2seconds(_oreecc)
+       _oretot_sec = _oreord_sec + _oreecc_sec
+
+       _uptime  = datetime.timedelta( seconds=_oretot_sec )
+       _timenet = _oretot_sec-self._hr_working_time
+       return _uptime, _timenet
+
 
     def is_working(self):
-       if not self.logs():
+       if not self.logs() and not self.is_mission():
           return False
        else:
           return True
+
+    def is_mission(self):
+       if hasattr(self, '_mission') and self._mission:
+           return True
+       else:
+           return False
 
     def is_today(self):
        if self._date.date() == self._now.date():

@@ -13,6 +13,8 @@ class HRdayList(list, HRday):
 
        self.label = label
 
+       self._days = HRday()
+
     def __str__(self):
        s = ''
 
@@ -44,6 +46,8 @@ class HRdayList(list, HRday):
        s += "{:.<20}".format( "Anomaly" )
        s += "{}\n".format( self.anomaly() )
 
+       #s += "\n" + str(self._days) + '\n'
+
        return s
 
     def append(self, args):
@@ -52,6 +56,7 @@ class HRdayList(list, HRday):
        self._uptime += args._uptime
        if not args.anomaly():
           self._timenet += args._timenet
+       self._days += args
 
     def _getattr_from_HRday(self, attr):
        return [getattr(i, attr)() for i in self]

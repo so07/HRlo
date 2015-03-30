@@ -140,7 +140,6 @@ class HRget(object):
         f = p.json()['Fields']
 
         if day:
-            print(day)
             d = d[day-1]
         
         if self.verbose:

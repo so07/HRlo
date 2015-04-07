@@ -198,7 +198,7 @@ class HRday(DayLog):
     def _get_hr_working_time(self):
        # read from DESCRORARIO to get working time for HR
        _time_info = self.HR['DESCRORARIO'].split()
-       if 'SABATO' in _time_info or 'DOMENICA' in _time_info:
+       if 'SABATO' in _time_info or 'DOMENICA' in _time_info or 'FESTIVO' in _time_info:
           _time_sec = 0
        else:
           _time_type = _time_info[0]

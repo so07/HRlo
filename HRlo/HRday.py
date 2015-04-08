@@ -195,17 +195,23 @@ class HRday(DayLog):
        exc_sec = exc.total_seconds()
        return exc_sec
 
+
     def _get_hr_working_time(self):
+       """Return working time for HR in seconds.
+          Get data from DESCRORARIO key.
+          If day is holiday return 0.
+       """
        # read from DESCRORARIO to get working time for HR
-       _time_info = self.HR['DESCRORARIO'].split()
-       if 'SABATO' in _time_info or 'DOMENICA' in _time_info or 'FESTIVO' in _time_info:
+       if self.is_holiday:
           _time_sec = 0
        else:
+          _time_info = self.HR['DESCRORARIO'].split()
           _time_type = _time_info[0]
           _time_time = _time_info[1].split(':')
           _time_sec  = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) ).total_seconds()
        #print(self.HR['DESCRORARIO'], _time_sec)
        return _time_sec
+
 
     def _get_hr_times(self):
        _oreord = float(self.HR['OREORD'])

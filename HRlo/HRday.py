@@ -34,6 +34,7 @@ class HRday(DayLog):
 
         self._hr_uptime = datetime.timedelta(0)
         self._hr_timenet = 0
+        self._hr_kotime = datetime.timedelta(0)
 
         DayLog.__init__(self)
 
@@ -58,8 +59,12 @@ class HRday(DayLog):
 
         #
 
+        # get working time to do for HR
         self._hr_working_time = self._get_hr_working_time()
+        # get uptime/nettime for HR
         self._hr_uptime, self._hr_timenet = self._get_hr_times()
+        # get KO time for HR
+        self._hr_kotime = self._get_hr_ko_time()
 
         sep = '&&&'
         # read from DESCRIZIONE1 field
@@ -72,9 +77,6 @@ class HRday(DayLog):
                   pass
                if 'MANCANTI' in k:
                   #self._hr_timenet -= self._unit_hr2seconds( float(v) )
-                  pass
-               if 'KO' in k:
-                  # time for lunch (to subtract from uptime)
                   pass
 
             # from IND.
@@ -111,11 +113,18 @@ class HRday(DayLog):
        s += "{:<10}".format( dayutils.sec2str(self.timenet()) )
        s += " {} ".format( "for HR" )
        s += "{}\n".format( dayutils.sec2str(self._hr_timenet) )
+
        s += "{:.<20}".format( "Lunch" )
        s += "{}\n".format( self._lunch )
+       # KO time
+       if self._hr_kotime:
+          s += "{:.<20}".format( "KO time" )
+          s += "{}\n".format( self._hr_kotime )
+
        if self._logs:
           s += "{:.<20}".format( "TimeStamps" )
           s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self._logs]) )
+
        if self.is_mission():
           s += "{:.<20}".format( "Mission" )
           s += "{}\n".format( self._mission )
@@ -134,7 +143,7 @@ class HRday(DayLog):
 
     def _unit_hr2seconds(self, hrtime):
         # convert to second
-        return hrtime *60.0*60.0
+        return float(hrtime) *60.0*60.0
     def _unit_hr2timedelta(self, hrtime):
         return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
 
@@ -158,6 +167,7 @@ class HRday(DayLog):
 
        a._hr_working_time = self._hr_working_time + other._hr_working_time
        a._lunch = self._lunch + other._lunch
+       a._hr_kotime = self._hr_kotime + other._hr_kotime
        a._mission = self._mission + other._mission
        a._hr_uptime = self._hr_uptime + other._hr_uptime
        a._hr_timenet = self._hr_timenet + other._hr_timenet
@@ -187,11 +197,12 @@ class HRday(DayLog):
 
     def _get_timenet(self):
 
+       # CHANGEIT
        d = self._date.weekday()
        if d == 5 or d == 6:
           return 0
 
-       exc = self._uptime - self.HR_workday
+       exc = self._uptime - self.HR_workday - self._get_hr_ko_time()
        exc_sec = exc.total_seconds()
        return exc_sec
 
@@ -202,7 +213,7 @@ class HRday(DayLog):
           If day is holiday return 0.
        """
        # read from DESCRORARIO to get working time for HR
-       if self.is_holiday:
+       if self.is_holiday():
           _time_sec = 0
        else:
           _time_info = self.HR['DESCRORARIO'].split()
@@ -214,8 +225,8 @@ class HRday(DayLog):
 
 
     def _get_hr_times(self):
-       _oreord = float(self.HR['OREORD'])
-       _oreecc = float(self.HR['OREECC'])
+       _oreord = self.HR['OREORD']
+       _oreecc = self.HR['OREECC']
        #print (_oreord, _oreecc)
 
        _oreord_sec = self._unit_hr2seconds(_oreord)
@@ -225,6 +236,20 @@ class HRday(DayLog):
        _uptime  = datetime.timedelta( seconds=_oretot_sec )
        _timenet = _oretot_sec-self._hr_working_time
        return _uptime, _timenet
+
+
+    def _get_hr_ko_time(self):
+        """Return KO time in datetime.timedelta.
+           Get data from KO flag in DESCRIZIONE1 field.
+           NO: KO is time from lunch to subtract from uptime.
+        """
+        sep = '&&&'
+        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
+           if 'KO' in k:
+               # time for lunch (to subtract from uptime)
+               return self._unit_hr2timedelta(v)
+           else:
+               return datetime.timedelta(0)
 
 
     def is_holiday(self):

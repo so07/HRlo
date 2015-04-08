@@ -228,11 +228,17 @@ class HRday(DayLog):
 
 
     def is_holiday(self):
-       _desc = self.HR['DESCRORARIO'].split()
-       if 'SABATO' in _desc or 'DOMENICA' in _desc or 'FESTIVO' in _desc:
+       """Return True if day is an holiday otherwise return False.
+          Check if DESCRORARIO key is equal to SABATO, DOMENICA, FESTIVO.
+       """
+       _desc = self.HR['DESCRORARIO'].split()[0]
+       _holiday = ['SABATO', 'DOMENICA', 'FESTIVO']
+       #if [s for s in _holiday if _desc in s]:
+       if any(_desc in s for s in _holiday):
            return True
        else:
            return False
+
 
     def is_working(self):
        if not self.logs() and not self.is_mission() and self.is_holiday():

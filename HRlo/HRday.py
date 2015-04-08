@@ -204,7 +204,7 @@ class HRday(DayLog):
           _time_type = _time_info[0]
           _time_time = _time_info[1].split(':')
           _time_sec  = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) ).total_seconds()
-       #print(_time_sec)
+       #print(self.HR['DESCRORARIO'], _time_sec)
        return _time_sec
 
     def _get_hr_times(self):
@@ -221,8 +221,15 @@ class HRday(DayLog):
        return _uptime, _timenet
 
 
+    def is_holiday(self):
+       _desc = self.HR['DESCRORARIO'].split()
+       if 'SABATO' in _desc or 'DOMENICA' in _desc or 'FESTIVO' in _desc:
+           return True
+       else:
+           return False
+
     def is_working(self):
-       if not self.logs() and not self.is_mission():
+       if not self.logs() and not self.is_mission() and self.is_holiday():
           return False
        else:
           return True

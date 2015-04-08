@@ -54,7 +54,7 @@ class HRdayList(list, HRday):
        #if not args.is_working(): return
        list.append(self, args)
        self._uptime += args._uptime
-       if not args.anomaly():
+       if not args.anomaly() and not args.is_holiday():
           self._timenet += args._timenet
        self._days += args
 

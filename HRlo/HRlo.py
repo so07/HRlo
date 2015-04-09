@@ -14,9 +14,10 @@ import color
 
 class HRlo(object):
 
-   def __init__(self, auth, config = {}):
-       hrget  = HRget.HRget(auth)
-       fields, HRdata = hrget.get()
+   def __init__(self, dauth, config = {}):
+       self.auth = HRauth.HRauth(**dauth)
+       self.hrget = HRget.HRget(self.auth)
+       fields, HRdata = self.hrget.get()
        self.data = [ HRday.HRday(fields, day) for day in HRdata]
 
        self.config = {}
@@ -171,14 +172,11 @@ def main():
 
    args = parser.parse_args()
 
-
-   auth = HRauth.HRauth(**dauth)
-
    config = {'today' : args.today}
 
    #config = {}
 
-   hr = HRlo(auth, config)
+   hr = HRlo(dauth, config)
 
    if args.from_day and args.to_day:
       days = dayutils.day_range(args.from_day, args.to_day)

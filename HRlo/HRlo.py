@@ -14,20 +14,16 @@ import color
 
 class HRlo(object):
 
-   def __init__(self, dauth, config = {}):
+   def __init__(self, dauth, config = {}, day_range=None):
        self.auth = HRauth.HRauth(**dauth)
        self.hrget = HRget.HRget(self.auth)
-       fields, HRdata = self.hrget.get()
-       self.data = [ HRday.HRday(fields, day) for day in HRdata]
+
+       self.data = None
+
+       self.day_range = day_range
 
        self.config = {}
        self.config.update( config )
-
-       anomalies = self.anomalies()
-       if anomalies:
-           col = color.color(color.RED)( str )
-           warning = "WARNING : {} anomalies found : {}".format(len(anomalies),  [ str(d.day().date()) for d in anomalies ] )
-           print( col(warning) )
 
    def __str__ (self):
        s = ''
@@ -36,6 +32,8 @@ class HRlo(object):
        return s
 
    def __getitem__(self, key):
+       if not self.data:
+           raise KeyError("no data for {}".format(key))
        #print( type(key))
        if not isinstance(key, datetime.datetime) and \
           not isinstance(key, datetime.date) and \
@@ -49,7 +47,13 @@ class HRlo(object):
           return self.data[key.day-1]
 
 
+   def init_data(self, day_range=None):
+       fields, HRdata = self.hrget.get()
+       self.data = [ HRday.HRday(fields, day) for day in HRdata]
+
+
    def get_report_day(self, day = datetime.datetime.today()):
+       self.init_data()
        d = self[day]
        d.label = "Dayly report : " + str(day.date())
        return d
@@ -57,12 +61,16 @@ class HRlo(object):
 
    def get_report_week(self, day = datetime.datetime.today()):
 
+       self.init_data()
+
        start, end = dayutils.week_bounds(day)
 
        return self.get_report(start, end, label="Weekly report")
 
 
    def get_report_month(self, day = datetime.datetime.today()):
+
+       self.init_data()
 
        start, end = dayutils.month_bounds(day)
 
@@ -84,7 +92,12 @@ class HRlo(object):
 
 
    def anomalies(self):
-       return [d for d in self.data if d.anomaly()] 
+       _anomalies = [d for d in self.data if d.anomaly()]
+       if _anomalies:
+           col = color.color(color.RED)( str )
+           warning = "WARNING : {} anomalies found : {}".format(len(_anomalies),  [ str(d.day().date()) for d in _anomalies ] )
+           print( col(warning) )
+       return _anomalies
 
    def get_report_all(self):
 
@@ -194,7 +207,7 @@ def main():
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day and not args.to_day:
       print("\nToday :")
-      print(hr[datetime.datetime.today()])
+      print(hr.get_report_day())
 
 
 if __name__ == '__main__':

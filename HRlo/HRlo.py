@@ -10,6 +10,7 @@ import HRget
 import HRday
 import HRdayList
 
+import color
 
 class HRlo(object):
 
@@ -23,7 +24,9 @@ class HRlo(object):
 
        anomalies = self.anomalies()
        if anomalies:
-           print("WARNING : {} anomalies found : {}".format(len(anomalies),  [ str(d.day().date()) for d in anomalies ] ))
+           col = color.color(color.RED)( str )
+           warning = "WARNING : {} anomalies found : {}".format(len(anomalies),  [ str(d.day().date()) for d in anomalies ] )
+           print( col(warning) )
 
    def __str__ (self):
        s = ''
@@ -44,34 +47,40 @@ class HRlo(object):
        else:
           return self.data[key.day-1]
 
+
    def get_report_day(self, day = datetime.datetime.today()):
        d = self[day]
        d.label = "Dayly report : " + str(day.date())
        return d
 
+
    def get_report_week(self, day = datetime.datetime.today()):
 
        start, end = dayutils.week_bounds(day)
 
-       label = "Weekly report : From " + str(start) + " To " + str(end)
+       return self.get_report(start, end, label="Weekly report")
 
-       l = HRdayList.HRdayList(label=label)
-       for i in self[start:end]:
-           if i.is_today() and not self.config.get('today', False): continue
-           l.append(i)
-       return l
 
    def get_report_month(self, day = datetime.datetime.today()):
 
        start, end = dayutils.month_bounds(day)
 
-       label = "Monthly report : From " + str(start) + " To " + str(end)
+       return self.get_report(start, end, label="Monthly report")
 
-       l = HRdayList.HRdayList(label=label)
+
+   def get_report(self, start, end, label = ''):
+
+       _label = "From {} To {}".format( str(start), str(end) )
+
+       if label:
+           _label = "{} : {}".format( label, _label)
+
+       l = HRdayList.HRdayList(label=_label)
        for i in self[start:end]:
            if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
        return l
+
 
    def anomalies(self):
        return [d for d in self.data if d.anomaly()] 
@@ -132,11 +141,36 @@ def main():
                             action='store_true',
                             help='Keep today in reports')
 
+
+   parser_range = parser.add_argument_group()
+
+   def _date(s):
+      for fmt in ['%Y-%m-%d', '%Y%m%d', '%d-%m-%Y', '%d/%m/%Y']:
+         try:
+            return datetime.datetime.strptime(s, fmt).date()
+         except:
+            pass
+      raise ValueError("invalid date {}".format(s))
+
+   parser_range.add_argument("--from",
+                             dest = 'from_day',
+                             type=_date,
+                             default=None, #default=datetime.datetime(1970, 1, 1),
+                             metavar="YYYY-MM-DD",
+                             help="From date YYYY-MM-DD")
+
+   parser_range.add_argument("--to",
+                             dest = 'to_day',
+                             type=_date,
+                             default=None, #default=datetime.datetime.today(),
+                             metavar="YYYY-MM-DD",
+                             help="To date YYYY-MM-DD")
+
+
    dauth = HRauth.add_parser(parser)
 
    args = parser.parse_args()
 
-   #print(args)
 
    auth = HRauth.HRauth(**dauth)
 
@@ -145,6 +179,10 @@ def main():
    #config = {}
 
    hr = HRlo(auth, config)
+
+   if args.from_day and args.to_day:
+      days = dayutils.day_range(args.from_day, args.to_day)
+      print(days)
 
    if args.daily:
       print(hr.get_report_day())
@@ -155,7 +193,8 @@ def main():
    if args.monthly:
       print(hr.get_report_month())
 
-   if not args.daily and not args.weekly and not args.monthly:
+   if not args.daily and not args.weekly and not args.monthly \
+      and not args.from_day and not args.to_day:
       print("\nToday :")
       print(hr[datetime.datetime.today()])
 

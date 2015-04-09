@@ -77,19 +77,11 @@ class HRget(object):
         # }}}
         # HEADERS {{{
         headers = {
-                   'Host': self.host,
-                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0',
-                   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                   'Accept-Language': 'en-US,en;q=0.5',
-                   'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                   'Referer': self.sheet_url,
-                   'Connection': 'keep-alive',
                    'Pragma': 'no-cache',
                    'Cache-Control': 'no-cache'
                   }
         # }}}
         # PARAMS  {{{
-                  #'IDEMPLOY': self.idemploy,
         params = {
                   'rows' : 300,
                   'startrow' : '0',

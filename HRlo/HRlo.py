@@ -48,7 +48,8 @@ class HRlo(object):
 
 
    def init_data(self, day_range=None):
-       fields, HRdata = self.hrget.get()
+       json = self.hrget.get()
+       fields, HRdata = json['Fields'], json['Data']
        self.data = [ HRday.HRday(fields, day) for day in HRdata]
 
 

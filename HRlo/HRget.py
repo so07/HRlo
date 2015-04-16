@@ -138,10 +138,12 @@ class HRget(object):
             print ('>>>FIELDS>>>', f)
             print ('>>>DATA>>>', d)
 
-            for i, item in enumerate(f):
-                print( item, ' = ', d[i])
+            #for i, item in enumerate(f):
+            #    print( item, ' = ', d[i])
 
-        return f, d
+        json = {'Fields' : f, 'Data' : d}
+
+        return json
 
 
 def add_parser(parser):
@@ -172,6 +174,14 @@ def main ():
 
     add_parser(parser)
 
+    parser.add_argument('-v', '--verbose',
+                        action="count", default=0,
+                        help="increase verbosity")
+
+    parser.add_argument('--dump',
+                        dest = 'file_out',
+                        help="dump to file")
+
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
@@ -179,11 +189,20 @@ def main ():
 
     auth = HRauth.HRauth(**vars(args))
 
-    h = HRget(auth, verbose=True)
+    h = HRget(auth, verbose=args.verbose)
 
-    f, d = h.get(year=args.year, month=args.month, day=args.day)
+    djson = h.get(year=args.year, month=args.month, day=args.day)
 
-    print(d)
+    if args.file_out:
+        import json
+        with open(args.file_out, 'w') as f:
+            json.dump(djson, f)
+        #with open(args.file_out, 'r') as f:
+        #    djson = json.load(f)
+
+    if args.verbose:
+       for k, v in zip(djson['Fields'], djson['Data']):
+          print(k, " = ", v)
 
 
 if __name__ == '__main__':

@@ -322,7 +322,9 @@ def main():
 
     h = HRget.HRget(auth, verbose=False)
 
-    f, d = h.get(year=args.year, month=args.month, day=args.day)
+    json = h.get(year=args.year, month=args.month, day=args.day)
+
+    f, d = json['Fields'], json['Data']
 
     #for i, j in zip(f, d):
     #    print(i, j)

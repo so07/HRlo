@@ -102,7 +102,7 @@ class HRday(DayLog):
 
     def __str__ (self):
        s = ''
-       if not self._date or not self.is_working():
+       if not self._date:
            return s
        #s += DayLog.__str__(self) + '\n'
 

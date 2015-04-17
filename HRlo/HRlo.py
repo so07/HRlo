@@ -172,14 +172,14 @@ def main():
                              type=_date,
                              default=None, #default=datetime.datetime(1970, 1, 1),
                              metavar="YYYY-MM-DD",
-                             help="From date YYYY-MM-DD")
+                             help="From date YYYY-MM-DD. NOT YET SUPPORTED")
 
    parser_range.add_argument("--to",
                              dest = 'to_day',
                              type=_date,
                              default=None, #default=datetime.datetime.today(),
                              metavar="YYYY-MM-DD",
-                             help="To date YYYY-MM-DD")
+                             help="To date YYYY-MM-DD. NOT YET SUPPORTED")
 
 
    dauth = HRauth.add_parser(parser)

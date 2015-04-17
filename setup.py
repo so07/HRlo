@@ -12,6 +12,6 @@ setup(
    author_email=config.author_email,
    url=config.url,
    packages=find_packages(),
-   scripts = ['bin/HRlo', 'bin/accaerralo']
+   scripts = ['bin/accaerralo', 'bin/HRlo', 'bin/HRday', 'bin/HRget']
 
 )

@@ -11,6 +11,7 @@ import HRday
 import HRdayList
 
 import color
+import config as HRconfig
 
 class HRlo(object):
 
@@ -181,6 +182,11 @@ def main():
                              metavar="YYYY-MM-DD",
                              help="To date YYYY-MM-DD. NOT YET SUPPORTED")
 
+   parser_other = parser.add_argument_group()
+
+   parser_other.add_argument('--version', action='version',
+                             version='%(prog)s ' + HRconfig.version,
+                             help='Print version')
 
    dauth = HRauth.add_parser(parser)
 

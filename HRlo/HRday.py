@@ -35,6 +35,7 @@ class HRday(DayLog):
         self._hr_uptime = datetime.timedelta(0)
         self._hr_timenet = 0
         self._hr_kotime = datetime.timedelta(0)
+        self._hr_roltime = datetime.timedelta(0)
 
         DayLog.__init__(self)
 
@@ -57,14 +58,19 @@ class HRday(DayLog):
 
         self._timenet = self._get_timenet()
 
+        self.is_rol_total()
+
         #
 
         # get working time to do for HR
-        self._hr_working_time = self._get_hr_working_time()
+        self._hr_working_time = self._get_hr_real_work_time()
         # get uptime/nettime for HR
         self._hr_uptime, self._hr_timenet = self._get_hr_times()
         # get KO time for HR
         self._hr_kotime = self._get_hr_ko_time()
+        # get ROL time
+        self._hr_roltime = self._get_hr_rol_time()
+
 
         sep = '&&&'
         # read from DESCRIZIONE1 field
@@ -120,6 +126,10 @@ class HRday(DayLog):
        if self._hr_kotime:
           s += "{:.<20}".format( "KO time" )
           s += "{}\n".format( self._hr_kotime )
+       # ROL time
+       if self._hr_roltime:
+          s += "{:.<20}".format( "ROL time" )
+          s += "{}\n".format( self._hr_roltime )
 
        if self._logs:
           s += "{:.<20}".format( "TimeStamps" )
@@ -168,6 +178,7 @@ class HRday(DayLog):
        a._hr_working_time = self._hr_working_time + other._hr_working_time
        a._lunch = self._lunch + other._lunch
        a._hr_kotime = self._hr_kotime + other._hr_kotime
+       a._hr_roltime = self._hr_roltime + other._hr_roltime
        a._mission = self._mission + other._mission
        a._hr_uptime = self._hr_uptime + other._hr_uptime
        a._hr_timenet = self._hr_timenet + other._hr_timenet
@@ -202,12 +213,18 @@ class HRday(DayLog):
        if d == 5 or d == 6:
           return 0
 
-       exc = self._uptime - self.HR_workday - self._get_hr_ko_time()
+       exc = self._uptime - self.HR_workday
+       # minus KO time
+       exc -= self._get_hr_ko_time()
+       # add ROL time
+       exc += self._get_hr_rol_time()
+
+       # convert in seconds
        exc_sec = exc.total_seconds()
+
        return exc_sec
 
-
-    def _get_hr_working_time(self):
+    def _get_hr_work_time(self):
        """Return working time for HR in seconds.
           Get data from DESCRORARIO key.
           If day is holiday return 0.
@@ -219,8 +236,24 @@ class HRday(DayLog):
           _time_info = self.HR['DESCRORARIO'].split()
           _time_type = _time_info[0]
           _time_time = _time_info[1].split(':')
-          _time_sec  = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) ).total_seconds()
+          _time_delta = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) )
+          # convert to seconds
+          _time_sec  = _time_delta.total_seconds()
        #print(self.HR['DESCRORARIO'], _time_sec)
+       return _time_sec
+
+
+    def _get_hr_real_work_time(self):
+       """Return real working time for HR in seconds involving ROL time.
+          If day is holiday return 0.
+       """
+       _hr_work_time_sec = self._get_hr_work_time()
+       _hr_work_time = datetime.timedelta( seconds=_hr_work_time_sec )
+       # subtract ROL time
+       _hr_work_time -= self._get_hr_rol_time()
+
+       _time_sec  = _hr_work_time.total_seconds()
+
        return _time_sec
 
 
@@ -251,6 +284,19 @@ class HRday(DayLog):
            else:
                return datetime.timedelta(0)
 
+    def _get_hr_rol_time(self):
+        """Return ROL time in datetime.timedelta.
+           Get data from ROL flag in DESCRIZIONE1 field.
+           Return time in datetime.timedelta.
+        """
+        sep = '&&&'
+        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
+           if 'ROL' in k:
+               # time for lunch (to subtract from uptime)
+               return self._unit_hr2timedelta(v)
+           else:
+               return datetime.timedelta(0)
+
 
     def is_holiday(self):
        """Return True if day is an holiday otherwise return False.
@@ -268,14 +314,41 @@ class HRday(DayLog):
     def is_working(self):
        if not self.logs() and not self.is_mission() and self.is_holiday():
           return False
-       else:
-          return True
+       # check for holiday
+       if self.is_holiday():
+           return False
+       # check for total rol day
+       if self.is_rol_total():
+          return False
+       return True
 
     def is_mission(self):
        if hasattr(self, '_mission') and self._mission:
            return True
        else:
            return False
+
+    def is_rol(self):
+        """Check for ROL time.
+           Return total ROL time in datetime.timedelta.
+        """
+        return self._get_hr_rol_time()
+
+    def is_rol_total(self):
+        """Check for entire day ROL.
+           Return bool.
+           If holiday return False.
+        """
+
+        if self.is_holiday():
+            return False
+
+        _rol_seconds = self._get_hr_rol_time().total_seconds()
+        if _rol_seconds == self._get_hr_work_time():
+           return True
+        else:
+           return False
+
 
     def is_today(self):
        if self._date.date() == self._now.date():

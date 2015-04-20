@@ -68,7 +68,8 @@ class HRlo(object):
 
 
    def get_report_day(self, day = datetime.date.today()):
-       return self.get_report(day, day, label="Daily report")
+       self.init_data( dayutils.day_range(day, day) )
+       return self
 
 
    def get_report_week(self, day = datetime.datetime.today()):

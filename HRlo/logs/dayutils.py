@@ -62,8 +62,14 @@ class day_range:
       self.end   = end
       self.step  = step
 
+   def __len__(self):
+      return len([d for d in self])
+
    def __str__(self):
-      return "start : {}; end : {}".format(self.start, self.end)
+      #if len(self) == 1:
+      #   return str(self.start)
+      #else:
+         return "start : {}; end : {}".format(self.start, self.end)
 
    def __iter__(self):
       self.this_day = self.start
@@ -80,12 +86,32 @@ class day_range:
       self.this_day = next_day
       return this_day
 
+   #def __contains__(self, day):
+   #   l = [ i for i in self if day.date() == i ]
+   #   if l:
+   #      return True
+   #   else:
+   #      return False
+
+
    def start(self):
       return self.start
    def end(self):
       return self.end
    def step(self):
       return self.step
+
+   def years(self):
+      for y in sorted( set([i.year for i in self]) ):
+         yield y
+
+   def months(self):
+      for m, y in sorted( set([(i.year, i.month) for i in self]) ):
+         yield m, y
+
+   def days(self):
+      for i in self:
+         yield i.year, i.month, i.day
 
 
 def week_bounds(day):
@@ -136,6 +162,26 @@ def main():
    t = datetime.timedelta(seconds=2876324)
 
    print( "sec2str", sec2str(t.total_seconds()) )
+
+
+   day1 = datetime.datetime(2015, 3, 3)
+   day2 = datetime.datetime(2015, 4, 12)
+
+   x = day_range( day1, day2, datetime.timedelta(2) )
+
+   print("Start", day1)
+   print("End", day2)
+   print("Years loop")
+   for i in x.years():
+      print(i)
+   print("Months loop")
+   for i, j in x.months():
+      print(i, j)
+   print("Days loop")
+   for i, j, k in x.days():
+      print(i, j, k)
+
+
 
 if __name__ == '__main__':
    main()

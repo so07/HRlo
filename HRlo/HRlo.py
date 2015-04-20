@@ -35,13 +35,22 @@ class HRlo(object):
    def __getitem__(self, key):
        if not self.data:
            raise KeyError("no data for {}".format(key))
-       #print( type(key))
        if not isinstance(key, datetime.datetime) and \
           not isinstance(key, datetime.date) and \
+          not isinstance(key, dayutils.day_range) and \
           not isinstance(key, slice):
           print("@__getitem__ NOT datetime.datetime")
           return None
-       if isinstance(key, slice):
+       if isinstance(key, dayutils.day_range):
+          l = [ d for d in self.data if d.day().date() in key ]
+          return l
+       elif isinstance(key, datetime.datetime):
+          l = [ d for d in self.data if d.day().date() == key.date() ]
+          return l
+       elif isinstance(key, datetime.date):
+          l = [ d for d in self.data if d.day().date() == key ]
+          return l
+       elif isinstance(key, slice):
           #print( key.start.day-1, key.stop.day-1)
           return self.data[key.start.day-1:key.stop.day-1]
        else:
@@ -49,21 +58,20 @@ class HRlo(object):
 
 
    def init_data(self, day_range=None):
-       json = self.hrget.get()
+       if day_range:
+          json = self.hrget.get_range(day_range)
+       else:
+          json = self.hrget.get()
+
        fields, HRdata = json['Fields'], json['Data']
        self.data = [ HRday.HRday(fields, day) for day in HRdata]
 
 
-   def get_report_day(self, day = datetime.datetime.today()):
-       self.init_data()
-       d = self[day]
-       d.label = "Dayly report : " + str(day.date())
-       return d
+   def get_report_day(self, day = datetime.date.today()):
+       return self.get_report(day, day, label="Daily report")
 
 
    def get_report_week(self, day = datetime.datetime.today()):
-
-       self.init_data()
 
        start, end = dayutils.week_bounds(day)
 
@@ -72,8 +80,6 @@ class HRlo(object):
 
    def get_report_month(self, day = datetime.datetime.today()):
 
-       self.init_data()
-
        start, end = dayutils.month_bounds(day)
 
        return self.get_report(start, end, label="Monthly report")
@@ -81,13 +87,20 @@ class HRlo(object):
 
    def get_report(self, start, end, label = ''):
 
-       _label = "From {} To {}".format( str(start), str(end) )
+       day_range = dayutils.day_range(start, end)
+
+       self.init_data(day_range)
+
+       if start == end:
+           _label = str(start)
+       else:
+           _label = "From {} To {}".format( str(start), str(end) )
 
        if label:
            _label = "{} : {}".format( label, _label)
 
        l = HRdayList.HRdayList(label=_label)
-       for i in self[start:end]:
+       for i in self[day_range]:
            if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
        return l
@@ -173,14 +186,14 @@ def main():
                              type=_date,
                              default=None, #default=datetime.datetime(1970, 1, 1),
                              metavar="YYYY-MM-DD",
-                             help="From date YYYY-MM-DD. NOT YET SUPPORTED")
+                             help="From date YYYY-MM-DD")
 
    parser_range.add_argument("--to",
                              dest = 'to_day',
                              type=_date,
                              default=None, #default=datetime.datetime.today(),
                              metavar="YYYY-MM-DD",
-                             help="To date YYYY-MM-DD. NOT YET SUPPORTED")
+                             help="To date YYYY-MM-DD")
 
    parser_other = parser.add_argument_group()
 
@@ -199,8 +212,7 @@ def main():
    hr = HRlo(dauth, config)
 
    if args.from_day and args.to_day:
-      days = dayutils.day_range(args.from_day, args.to_day)
-      print(days)
+      print(hr.get_report(args.from_day, args.to_day))
 
    if args.daily:
       print(hr.get_report_day())

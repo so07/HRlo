@@ -88,8 +88,12 @@ class HRdayList(list, HRday):
        return [ i .date() for i in self if i.is_working() ]
 
     def timenet_mean(self):
+       if self.working_days_number() == 0:
+          return 0
        return self.timenet() / self.working_days_number()
 
     def uptime_mean(self):
+       if self.working_days_number() == 0:
+          return datetime.timedelta(0)
        return self.uptime() / self.working_days_number()
 

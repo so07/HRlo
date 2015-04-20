@@ -22,7 +22,7 @@ class HRget(object):
         self.idemploy = "{:0>7}".format(str(HRauth.idemploy()))
         #print(self.idemploy)
 
-        if self.verbose:
+        if self.verbose > 1:
            print (">>>USERNAME>>>", self.username)
            print (">>>IDEMPLOY>>>", self.idemploy)
            #print ("[{}]@{}".format(__class__.__name__, sys._getframe().f_code.co_name))
@@ -37,7 +37,7 @@ class HRget(object):
         r = self.session.post(self.login_url, params=auth, allow_redirects=False)
         self.cookies = r.cookies
 
-        if self.verbose:
+        if self.verbose > 1:
            print (">>>CODE>>>", r.status_code)
            print (">>>HISTORY>>>", r.history)
            print (">>>HEADERS>>>", r.headers)
@@ -51,6 +51,32 @@ class HRget(object):
         except:
            print("\n[HRget] *** ERROR *** on HR authentication!\n")
            sys.exit(1)
+
+    def get_range(self, day_range):
+       data = []
+       # loop over months of day_range
+       for y, m in day_range.months():
+
+          # get month data from HR
+          full_month = self.get(y, m)
+
+          # get first and last days for month
+          first, last = dayutils.month_bounds( datetime.date(y, m, 1) )
+          # to avoid future day: if same month of today's month set last day to today
+          if dayutils.is_same_month( datetime.datetime(y, m, 1), datetime.datetime.today() ):
+             last = datetime.datetime.today().date()
+          # list of month days within day_range
+          l = [ i.day for i in dayutils.day_range(first, last) if i in day_range ]
+          # extract days within day_range from data of all month
+          old_data = full_month['Data']
+          data += [ old_data[i-1] for i in l ]
+
+          # save fields
+          fields = full_month['Fields']
+
+       if data:
+         jret = {'Fields' : fields, 'Data' : data}
+         return jret
 
 
     def get(self, year  = datetime.datetime.today().year,
@@ -68,7 +94,7 @@ class HRget(object):
         if dayutils.is_same_month( datetime.datetime(year, month, 1), datetime.datetime.today() ):
            last_day = datetime.datetime.today().day
 
-        if self.verbose:
+        if self.verbose > 1:
             print (">>>NUMDAYMONTH>>>", num_days_in_month)
             print (">>>LASTDAY>>>", last_day)
 
@@ -134,7 +160,7 @@ class HRget(object):
         if day:
             d = d[day-1]
         
-        if self.verbose:
+        if self.verbose > 1:
             print ('>>>FIELDS>>>', f)
             print ('>>>DATA>>>', d)
 

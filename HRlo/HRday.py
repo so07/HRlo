@@ -20,6 +20,8 @@ class HRday(DayLog):
     HR_lunch_end   = datetime.timedelta(hours=15, minutes= 0)
     HR_lunch_time  = datetime.timedelta(hours=30, minutes= 0)
 
+    sep_descr = '&&&'
+
     def __init__(self, field = None, data = None, label = None):
 
         self._now = datetime.datetime.today()
@@ -32,10 +34,12 @@ class HRday(DayLog):
         self._lunch = 0
         self._mission = 0
 
-        self._hr_uptime = datetime.timedelta(0)
-        self._hr_timenet = 0
-        self._hr_kotime = datetime.timedelta(0)
-        self._hr_roltime = datetime.timedelta(0)
+        self._hr_time_net = 0
+        self._hr_time_up      = datetime.timedelta(0)
+        self._hr_time_ko      = datetime.timedelta(0)
+        self._hr_time_rol     = datetime.timedelta(0)
+        self._hr_time_trip    = datetime.timedelta(0)
+        self._hr_time_mission = datetime.timedelta(0)
 
         DayLog.__init__(self)
 
@@ -58,31 +62,37 @@ class HRday(DayLog):
 
         self._timenet = self._get_timenet()
 
-        self.is_rol_total()
-
         #
 
         # get working time to do for HR
         self._hr_working_time = self._get_hr_real_work_time()
         # get uptime/nettime for HR
-        self._hr_uptime, self._hr_timenet = self._get_hr_times()
+        self._hr_time_up, self._hr_time_net = self._get_hr_times()
         # get KO time for HR
-        self._hr_kotime = self._get_hr_ko_time()
+        self._hr_time_ko = self._get_hr_time_ko()
         # get ROL time
-        self._hr_roltime = self._get_hr_rol_time()
+        self._hr_time_rol = self._get_hr_time_rol()
+        # get TRIP time
+        self._hr_time_trip = self._get_hr_time_trip()
+        # get MISSION time
+        self._hr_time_mission = self._get_hr_time_mission()
 
 
-        sep = '&&&'
+        # update uptime with mission/business trip times
+        self._uptime += self._hr_time_trip
+        self._uptime += self._hr_time_mission
+
+        sep = self.sep_descr
         # read from DESCRIZIONE1 field
         for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
 
             # from ORE
             if 'ORE' in k:
                if 'ECCEDENTI' in k:
-                  #self._hr_timenet += self._unit_hr2seconds( float(v) )
+                  #self._hr_time_net += self._unit_hr2seconds( float(v) )
                   pass
                if 'MANCANTI' in k:
-                  #self._hr_timenet -= self._unit_hr2seconds( float(v) )
+                  #self._hr_time_net -= self._unit_hr2seconds( float(v) )
                   pass
 
             # from IND.
@@ -92,12 +102,6 @@ class HRday(DayLog):
                if 'DI MISSIONE' in k:
                   self._mission = int(float(v))
 
-            # from MISSION (not with IND.)
-            if 'MISSIONE' in k and not 'IND' in k:
-               pass
-
-        # update for mission
-        pass
 
 
     def __str__ (self):
@@ -114,30 +118,42 @@ class HRday(DayLog):
        s += "{:.<20}".format( "Uptime" )
        s += "{:<10}".format( dayutils.sec2str(self._uptime.total_seconds()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_uptime.total_seconds()) )
+       s += "{}\n".format( dayutils.sec2str(self._hr_time_up.total_seconds()) )
        s += "{:.<20}".format( "Timenet" )
        s += "{:<10}".format( dayutils.sec2str(self.timenet()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_timenet) )
+       s += "{}\n".format( dayutils.sec2str(self._hr_time_net) )
 
        s += "{:.<20}".format( "Lunch" )
        s += "{}\n".format( self._lunch )
        # KO time
-       if self._hr_kotime:
+       if self._hr_time_ko:
           s += "{:.<20}".format( "KO time" )
-          s += "{}\n".format( self._hr_kotime )
+          s += "{}\n".format( self._hr_time_ko )
+
        # ROL time
-       if self._hr_roltime:
+       if self._hr_time_rol:
           s += "{:.<20}".format( "ROL time" )
-          s += "{}\n".format( self._hr_roltime )
+          s += "{}\n".format( self._hr_time_rol )
+
+       # TRIP time
+       if self._hr_time_trip:
+          s += "{:.<20}".format( "Business trip time" )
+          s += "{}\n".format( self._hr_time_trip )
+
+       # MISSION time
+       if self._hr_time_mission:
+          s += "{:.<20}".format( "Mission time" )
+          s += "{}\n".format( self._hr_time_mission )
+
+       if self.is_mission():
+          s += "{:.<20}".format( "Mission" )
+          s += "{}\n".format( self._mission )
 
        if self._logs:
           s += "{:.<20}".format( "TimeStamps" )
           s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self._logs]) )
 
-       if self.is_mission():
-          s += "{:.<20}".format( "Mission" )
-          s += "{}\n".format( self._mission )
        s += "{:.<20}".format( "Anomaly" )
        s += "{}\n".format( str(self.anomaly()) )
 
@@ -173,15 +189,15 @@ class HRday(DayLog):
        a._timenet = self._timenet + other._timenet
        a._anomaly = self._anomaly + other._anomaly
 
-       #
-
        a._hr_working_time = self._hr_working_time + other._hr_working_time
        a._lunch = self._lunch + other._lunch
-       a._hr_kotime = self._hr_kotime + other._hr_kotime
-       a._hr_roltime = self._hr_roltime + other._hr_roltime
+       a._hr_time_ko = self._hr_time_ko + other._hr_time_ko
+       a._hr_time_rol = self._hr_time_rol + other._hr_time_rol
+       a._hr_time_trip = self._hr_time_trip + other._hr_time_trip
+       a._hr_time_mission = self._hr_time_mission + other._hr_time_mission
        a._mission = self._mission + other._mission
-       a._hr_uptime = self._hr_uptime + other._hr_uptime
-       a._hr_timenet = self._hr_timenet + other._hr_timenet
+       a._hr_time_up = self._hr_time_up + other._hr_time_up
+       a._hr_time_net = self._hr_time_net + other._hr_time_net
 
        return a
 
@@ -215,9 +231,13 @@ class HRday(DayLog):
 
        exc = self._uptime - self.HR_workday
        # minus KO time
-       exc -= self._get_hr_ko_time()
+       exc -= self._get_hr_time_ko()
        # add ROL time
-       exc += self._get_hr_rol_time()
+       exc += self._get_hr_time_rol()
+       # add trip time
+       exc += self._get_hr_time_trip()
+       # add mission time
+       exc += self._get_hr_time_mission()
 
        # convert in seconds
        exc_sec = exc.total_seconds()
@@ -250,7 +270,7 @@ class HRday(DayLog):
        _hr_work_time_sec = self._get_hr_work_time()
        _hr_work_time = datetime.timedelta( seconds=_hr_work_time_sec )
        # subtract ROL time
-       _hr_work_time -= self._get_hr_rol_time()
+       _hr_work_time -= self._get_hr_time_rol()
 
        _time_sec  = _hr_work_time.total_seconds()
 
@@ -271,31 +291,44 @@ class HRday(DayLog):
        return _uptime, _timenet
 
 
-    def _get_hr_ko_time(self):
+    def _get_hr_time(self, key):
+        """Return KEY time in datetime.timedelta.
+           Get data from KEY flag in DESCRIZIONE1 field.
+           Return time in datetime.timedelta.
+        """
+        sep = self.sep_descr
+        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
+           if k.startswith(key):
+           #if key in k:
+               return self._unit_hr2timedelta(v)
+        return datetime.timedelta(0)
+
+
+    def _get_hr_time_ko(self):
         """Return KO time in datetime.timedelta.
            Get data from KO flag in DESCRIZIONE1 field.
-           NO: KO is time from lunch to subtract from uptime.
+           NB: KO is time from lunch to subtract from uptime.
         """
-        sep = '&&&'
-        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
-           if 'KO' in k:
-               # time for lunch (to subtract from uptime)
-               return self._unit_hr2timedelta(v)
-           else:
-               return datetime.timedelta(0)
+        return self._get_hr_time('KO')
 
-    def _get_hr_rol_time(self):
+    def _get_hr_time_rol(self):
         """Return ROL time in datetime.timedelta.
            Get data from ROL flag in DESCRIZIONE1 field.
            Return time in datetime.timedelta.
         """
-        sep = '&&&'
-        for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
-           if 'ROL' in k:
-               # time for lunch (to subtract from uptime)
-               return self._unit_hr2timedelta(v)
-           else:
-               return datetime.timedelta(0)
+        return self._get_hr_time('ROL')
+
+    def _get_hr_time_trip(self):
+        """Return business trip time in datetime.timedelta.
+           Get data from TRASFERTA flag in DESCRIZIONE1 field.
+        """
+        return self._get_hr_time('TRASFERTA')
+
+    def _get_hr_time_mission(self):
+        """Return mission time in datetime.timedelta.
+           Get data from MISSIONE flag in DESCRIZIONE1 field.
+        """
+        return self._get_hr_time('MISSIONE')
 
 
     def is_holiday(self):
@@ -328,11 +361,15 @@ class HRday(DayLog):
        else:
            return False
 
+    def is_transfer(self):
+       return self._get_hr_time('TRASFERTA')
+
+
     def is_rol(self):
         """Check for ROL time.
            Return total ROL time in datetime.timedelta.
         """
-        return self._get_hr_rol_time()
+        return self._get_hr_time_rol()
 
     def is_rol_total(self):
         """Check for entire day ROL.
@@ -343,7 +380,7 @@ class HRday(DayLog):
         if self.is_holiday():
             return False
 
-        _rol_seconds = self._get_hr_rol_time().total_seconds()
+        _rol_seconds = self._get_hr_time_rol().total_seconds()
         if _rol_seconds == self._get_hr_work_time():
            return True
         else:

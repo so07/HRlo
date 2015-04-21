@@ -6,7 +6,7 @@
 ```
 git clone https://github.com/so07/HRlo.git
 cd HRlo
-sudo python setup.py install
+sudo python3 setup.py install
 ```
 
 ## SIMPLE USAGE:

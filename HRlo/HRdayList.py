@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import datetime
 
-from logs import dayutils
+from HRlo.logs import dayutils
 
-from HRday import HRday
+from . import HRday
 
-class HRdayList(list, HRday):
+class HRdayList(list, HRday.HRday):
 
     def __init__(self, label = None):
        self._uptime  = datetime.timedelta(0)
@@ -13,7 +13,7 @@ class HRdayList(list, HRday):
 
        self.label = label
 
-       self._days = HRday()
+       self._days = HRday.HRday()
 
     def __str__(self):
        s = ''

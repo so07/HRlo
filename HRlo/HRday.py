@@ -2,10 +2,14 @@
 import re
 import sys
 import datetime
+import argparse
 
-from logs import dayutils
+from HRlo.logs import dayutils
 
-from logs.daylog import DayLog
+from HRlo.logs.daylog import DayLog
+
+from . import HRauth
+from . import HRget
 
 class HRday(DayLog):
 
@@ -383,9 +387,6 @@ def debug():
 
 
 def main():
-
-    import argparse
-    import HRget, HRauth
 
     parser = argparse.ArgumentParser(prog='HRday',
                                      description='',

@@ -3,15 +3,15 @@ import re
 import sys
 import datetime
 
-from logs import dayutils
+from HRlo.logs import dayutils
 
-import HRauth
-import HRget
-import HRday
-import HRdayList
+from . import HRauth
+from . import HRget
+from . import HRday
+from . import HRdayList
 
-import color
-import config as HRconfig
+from . import color
+from . import config as HRconfig
 
 class HRlo(object):
 

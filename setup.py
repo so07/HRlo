@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from setuptools import setup, find_packages
+from distutils.core import setup
 
 from HRlo import config
 
@@ -11,7 +11,7 @@ setup(
    author=config.author,
    author_email=config.author_email,
    url=config.url,
-   packages=find_packages(),
-   scripts = ['bin/accaerralo', 'bin/HRlo', 'bin/HRday', 'bin/HRget']
+   packages=['HRlo', 'HRlo/logs'],
+   scripts = ['bin/accaerralo', 'bin/HRlo', 'bin/HRday', 'bin/HRget'],
 
 )

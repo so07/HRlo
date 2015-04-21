@@ -41,14 +41,14 @@ def main():
     for i, o in pairwise(logs):
         d = o-i
         if args.verbose:
-           print 'IN', i.time(), 'OUT', o.time(), 'UPTIME', d
+           print('IN', i.time(), 'OUT', o.time(), 'UPTIME', d)
         uptime += d
 
-    print 'Uptime   ', uptime
+    print('Uptime   ', uptime)
 
     if len(logs)%2 ==0:
-       print 'Remain   ', HR_workday-uptime
-       print 'Est.exit ', now+(HR_workday-uptime)
+       print('Remain   ', HR_workday-uptime)
+       print('Est.exit ', now+(HR_workday-uptime))
 
 
 if __name__ == '__main__':

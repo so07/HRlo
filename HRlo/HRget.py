@@ -4,8 +4,12 @@ import sys
 import requests
 import datetime
 import calendar
+import argparse
+import json
 
-from logs import dayutils
+from HRlo.logs import dayutils
+
+from . import HRauth
 
 class HRget(object):
 
@@ -191,9 +195,6 @@ def add_parser(parser):
 
 def main ():
 
-    import argparse
-    import HRauth
-
     parser = argparse.ArgumentParser(prog='HRget',
                                      description='',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -220,7 +221,6 @@ def main ():
     djson = h.get(year=args.year, month=args.month, day=args.day)
 
     if args.file_out:
-        import json
         with open(args.file_out, 'w') as f:
             json.dump(djson, f)
         #with open(args.file_out, 'r') as f:

@@ -176,6 +176,46 @@ class HRget(object):
         return json
 
 
+    def tot(self, year  = datetime.date.today().year,
+                  month = datetime.date.today().month):
+
+        date = datetime.date(year, month, 1) + datetime.timedelta(days=calendar.monthrange(year, month)[1])
+
+        # COOKIES {{{
+        cookies = self.cookies
+        # }}}
+        # HEADERS {{{
+        headers = {
+                   'Pragma': 'no-cache',
+                   'Cache-Control': 'no-cache'
+                  }
+        # }}}
+        # PARAMS  {{{
+        params = {
+                  'rows' : 100,
+                  'startrow' : '0',
+                  'count' : 'false',
+                  'cmdhash':'2e2926382311a0b72e72cd1e1cdc4ccc',
+                  'sqlcmd' : 'rows:hfpr_fgadgetconta',
+                  'pIDEMPLOY': self.idemploy,
+                  'pIDCOMPANY':'000001',
+                  'pDATA':date,
+                  'pADMIN':'',
+                 }
+        # }}}
+
+        p = self.session.post(self.sheet_url, cookies=cookies)
+
+        p = self.session.post(self.post_url, headers=headers, cookies=cookies, params=params)
+
+        d = p.json()['Data'][:-1]
+        f = p.json()['Fields']
+
+        json = {'Fields' : f, 'Data' : d}
+
+        return json
+
+
 def add_parser(parser):
 
    date_parser = parser.add_argument_group('Date options')
@@ -205,6 +245,14 @@ def main ():
                         action="count", default=0,
                         help="increase verbosity")
 
+    parser.add_argument('-g', '--get',
+                        action='store_true',
+                        help="get day")
+
+    parser.add_argument('-t', '--tot',
+                        action='store_true',
+                        help="get tot")
+
     parser.add_argument('--dump',
                         dest = 'file_out',
                         help="dump to file")
@@ -218,17 +266,32 @@ def main ():
 
     h = HRget(auth, verbose=args.verbose)
 
-    djson = h.get(year=args.year, month=args.month, day=args.day)
+
+    if args.get:
+
+       djson = h.get(year=args.year, month=args.month, day=args.day)
+
+       if args.verbose:
+          for k, v in zip(djson['Fields'], djson['Data']):
+             print(k, " = ", v)
+
+
+    if args.tot:
+
+       djson = h.tot(year=args.year, month=args.month)
+
+       if args.verbose:
+          for d in djson['Data']:
+              for k, v in zip(djson['Fields'], d):
+                 print(k, " = ", v)
+              print()
+
 
     if args.file_out:
         with open(args.file_out, 'w') as f:
             json.dump(djson, f)
         #with open(args.file_out, 'r') as f:
         #    djson = json.load(f)
-
-    if args.verbose:
-       for k, v in zip(djson['Fields'], djson['Data']):
-          print(k, " = ", v)
 
 
 if __name__ == '__main__':

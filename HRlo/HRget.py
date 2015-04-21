@@ -9,7 +9,7 @@ import json
 
 from HRlo.logs import dayutils
 
-from . import HRauth
+from HRlo import HRauth
 
 class HRget(object):
 

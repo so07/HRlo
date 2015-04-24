@@ -27,12 +27,12 @@ class HRauth(dict):
       # read from args
       self.update( {k: kwargs[k] for k in self['required'] if kwargs.get(k, None)} )
 
+      self._check_required()
+
       self._get_password()
 
       if self['save']:
          self._write_config_file(self['config_file'])
-
-      self._check_required()
 
 
    def _get_password(self):
@@ -86,7 +86,7 @@ class HRauth(dict):
       """Read from config file"""
 
       if not os.path.isfile(fname):
-         return
+         return {}
 
       parser = SafeConfigParser()
       parser.read(fname)

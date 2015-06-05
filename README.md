@@ -61,3 +61,10 @@ accaerralo -mw -t
 ```
 accaerralo --from YYYY-MM-DD --to YYYY-MM-DD
 ```
+
+#### Phone numbers
+
+```
+accaerralo -p SURNAME
+```
+

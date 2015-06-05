@@ -132,6 +132,9 @@ class HRlo(object):
        print(w)
        print(m)
 
+   def get_phone(self, surname):
+       return self.hrget.phone(surname)
+
 
 def debug():
 
@@ -198,6 +201,10 @@ def main():
 
    parser_other = parser.add_argument_group()
 
+   parser_other.add_argument('-p', '--phone',
+                             metavar = "SURNAME",
+                             help="get phone number")
+
    parser_other.add_argument('--version', action='version',
                              version='%(prog)s ' + HRconfig.version,
                              help='Print version')
@@ -224,8 +231,13 @@ def main():
    if args.monthly:
       print(hr.get_report_month())
 
+   if args.phone:
+       d = hr.get_phone(args.phone)
+       for k in d:
+           print(d[k])
+
    if not args.daily and not args.weekly and not args.monthly \
-      and not args.from_day and not args.to_day:
+      and not args.from_day and not args.to_day and not args.phone:
       print("\nToday :")
       print(hr.get_report_day())
 

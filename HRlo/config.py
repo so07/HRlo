@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 name = 'HRlo'
-version = '0.2.2'
+version = '0.3.0'
 description = ''
 
 url = ''

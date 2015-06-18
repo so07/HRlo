@@ -345,7 +345,7 @@ class HRday(DayLog):
            return False
 
     def is_transfer(self):
-       return self._get_hr_time('TRASFERTA')
+       return self._get_hr_time(self.time_hash['trip'])
 
 
     def is_dayoff(self):
@@ -359,7 +359,7 @@ class HRday(DayLog):
         """Check for ROL time.
            Return total ROL time in datetime.timedelta.
         """
-        return self._get_hr_time('ROL')
+        return self._get_hr_time(self.time_hash['rol'])
 
     def is_rol_total(self):
         """Check for entire day ROL.
@@ -370,7 +370,7 @@ class HRday(DayLog):
         if self.is_holiday():
             return False
 
-        _rol_seconds = self._get_hr_time('ROL').total_seconds()
+        _rol_seconds = self._get_hr_time(self.time_hash['rol']).total_seconds()
         if _rol_seconds == self._get_hr_work_time():
            return True
         else:

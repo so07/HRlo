@@ -2,6 +2,7 @@
 import re
 import os
 import sys
+import requests
 
 import getpass
 import base64
@@ -20,6 +21,9 @@ class HRauth(dict):
 
       dict.__init__(self, **kwargs)
 
+      if self['remove_config_file']:
+          self._remove_config_file()
+
       self['required'] = ['host', 'username', 'idemploy']
 
       # read from config_file
@@ -32,7 +36,8 @@ class HRauth(dict):
       self._get_password()
 
       if self['save']:
-         self._write_config_file(self['config_file'])
+          if self.login():
+              self._write_config_file(self['config_file'])
 
 
    def _get_password(self):
@@ -62,10 +67,17 @@ class HRauth(dict):
       _enc  = self['password_encoding']
       _pass = self['password']
 
+
       if   _enc == 'clear':
          _pass = self['password']
       elif _enc == 'base64':
-         _pass = base64.b64encode(_pass)
+         if isinstance(_pass, bytes):
+            _pass = base64.b64encode(_pass)
+         else:
+            _pass = base64.b64encode(_pass.encode('ascii'))
+
+      if isinstance(_pass, bytes):
+          _pass = _pass.decode()
 
       return _pass
 
@@ -114,6 +126,29 @@ class HRauth(dict):
        with open(fname, "w") as f:
           parser.write(f)
 
+   def _remove_config_file(self):
+       if os.path.isfile(self['config_file']):
+         print("Removing config file :", self['config_file'])
+         os.remove(self['config_file'])
+
+
+   def login(self):
+
+       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self['password'], 'm_cAction' : 'login'}
+
+       _login_url  = 'https://' + self['host'] + '/HRPortal/servlet/cp_login'
+
+       _session = requests.Session()
+
+       r = _session.post(_login_url, params=auth, allow_redirects=False)
+
+       try:
+          if 'jsp/home.jsp' in r.headers['location']:
+             return True
+       except:
+          print("\n[HRauth] *** ERROR *** on HR authentication!\n")
+          sys.exit(1)
+
 
    def host(self):
       return self['host']
@@ -154,6 +189,10 @@ def add_parser(parser):
    authparser.add_argument('--password-encoding',
                            choices=['clear', 'base64'], default='base64',
                            help='Password encoding')
+
+   authparser.add_argument('--remove-config-file',
+                           action='store_true',
+                           help='Remove HR config file')
 
    args = parser.parse_args()
    return vars(args)

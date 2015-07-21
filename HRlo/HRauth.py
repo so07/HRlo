@@ -65,7 +65,10 @@ class HRauth(dict):
       if   _enc == 'clear':
          _pass = self['password']
       elif _enc == 'base64':
-         _pass = base64.b64encode(_pass)
+         _pass = base64.b64encode(_pass.encode('ascii'))
+
+      if isinstance(_pass, bytes):
+          _pass = _pass.decode()
 
       return _pass
 

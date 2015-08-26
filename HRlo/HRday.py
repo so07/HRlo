@@ -181,6 +181,13 @@ class HRday(DayLog):
     def _unit_hr2timedelta(self, hrtime):
         return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
 
+    def _is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
     def __repr__(self):
        return str(self._date.date())
 
@@ -249,6 +256,22 @@ class HRday(DayLog):
 
        return exc_sec
 
+
+    def _check_hr_work_time(self, type_, time_):
+        """Check HR work time in DESCRORARIO key."""
+
+        if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
+            print("[HRday] ***ERROR***")
+            print("Worker not employed in date", self._date.date())
+            sys.exit(-1)
+
+        if not self._is_number(time_[0]) or not self._is_number(time_[1]):
+            print("[HRday] ***ERROR***")
+            print("HR Time not well defined on date", self._date.date())
+            #print(type_, time_)
+            sys.exit(-1)
+
+
     def _get_hr_work_time(self):
        """Return working time for HR in seconds.
           Get data from DESCRORARIO key.
@@ -261,6 +284,7 @@ class HRday(DayLog):
           _time_info = self.HR['DESCRORARIO'].split()
           _time_type = _time_info[0]
           _time_time = _time_info[1].split(':')
+          self._check_hr_work_time(_time_type, _time_time)
           _time_delta = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) )
           # convert to seconds
           _time_sec  = _time_delta.total_seconds()

@@ -86,6 +86,14 @@ class HRget(object):
          return jret
 
 
+    def _check_data(self, d, year, month, day):
+
+        if len(d) < 2:
+            print("[HRget] ***ERROR***")
+            print("Data not found in date {}-{}".format(year, month) )
+            sys.exit(-1)
+
+
     def get(self, year  = datetime.datetime.today().year,
                   month = datetime.datetime.today().month,
                   day   = None):
@@ -163,6 +171,8 @@ class HRget(object):
 
         d = p.json()['Data'][:last_day]
         f = p.json()['Fields']
+
+        self._check_data(d, year, month, day)
 
         if day:
             d = d[day-1]

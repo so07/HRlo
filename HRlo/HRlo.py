@@ -4,6 +4,7 @@ import sys
 import datetime
 
 from HRlo.logs import dayutils
+from HRlo.utils import HashedDict, NameParser
 
 from . import HRauth
 from . import HRget
@@ -211,6 +212,7 @@ def main():
 
    parser_other.add_argument('-p', '--phone',
                              metavar = "SURNAME",
+                             action = NameParser,
                              help="get worker phone number")
 
    parser_other.add_argument('--version', action='version',

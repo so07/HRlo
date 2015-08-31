@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import re
+import argparse
 
 class HashedDict (dict):
 
@@ -28,4 +30,16 @@ class HashedDict (dict):
         return super(HashedDict,self).__str__()
     def _repr (self):
         return super(HashedDict,self).__repr__()
+
+
+def refine_string(_str):
+    # remove multiple spaces
+    _str = re.sub(' +', ' ', _str)
+    return _str
+
+class NameParser(argparse.Action):
+
+     def __call__(self, parser, namespace, values, option_string=None):
+         values = refine_string(values)
+         setattr(namespace, self.dest, values)
 

@@ -3,7 +3,7 @@ import csv
 import argparse
 import itertools
 
-from HRlo.utils import HashedDict
+from HRlo.utils import HashedDict, NameParser
 
 from . import HRauth
 from . import HRget
@@ -155,6 +155,7 @@ def add_parser(parser):
    _parser.add_argument('--in', '--is_present',
                         dest = 'presence',
                         metavar = 'SURNAME',
+                        action = NameParser,
                         help='get report on worker')
 
 

@@ -21,12 +21,12 @@ def add_parser(parser):
    _parser.add_argument('--key',
                         dest = 'key',
                         nargs ='+',
-                        help='get key')
+                        help='key of csv data to enquire')
 
    _parser.add_argument('--value',
                         dest = 'value',
                         nargs ='+',
-                        help='get value')
+                        help='value of csv data to filter on key results')
 
    _parser.add_argument('-v', '--verbose',
                         action="count", default=0,
@@ -39,7 +39,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog='HRcompany',
                                      description='',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
 

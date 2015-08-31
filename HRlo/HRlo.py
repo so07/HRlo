@@ -159,27 +159,25 @@ def main():
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
                                     description='',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter
-                                   )
-
+                                    formatter_class=argparse.RawTextHelpFormatter)
 
    parser_todo = parser.add_argument_group()
 
    parser_todo.add_argument('-d', '--daily',
                             action='store_true',
-                            help='Daily report')
+                            help='daily report')
 
    parser_todo.add_argument('-w', '--weekly',
                             action='store_true',
-                            help='Weekly report')
+                            help='weekly report')
 
    parser_todo.add_argument('-m', '--monthly',
                             action='store_true',
-                            help='Monthly report')
+                            help='monthly report')
 
    parser_todo.add_argument('-t', '--today',
                             action='store_true',
-                            help='Keep today in reports')
+                            help='keep today in reports')
 
 
    parser_range = parser.add_argument_group()
@@ -197,7 +195,7 @@ def main():
                              type=_date,
                              default=None, #default=datetime.datetime(1970, 1, 1),
                              metavar="YYYY-MM-DD",
-                             help="From date YYYY-MM-DD")
+                             help="from date YYYY-MM-DD")
 
    parser_range.add_argument("--to",
                              dest = 'to_day',
@@ -205,7 +203,7 @@ def main():
                              #default=None,
                              default=datetime.date.today(),
                              metavar="YYYY-MM-DD",
-                             help="To date YYYY-MM-DD")
+                             help="to date YYYY-MM-DD (default %(default)s)")
 
    HRpresence.add_parser(parser)
 
@@ -218,7 +216,7 @@ def main():
 
    parser_other.add_argument('--version', action='version',
                              version='%(prog)s ' + HRconfig.version,
-                             help='Print version')
+                             help='print version and exit')
 
    dauth = HRauth.add_parser(parser)
 

@@ -164,7 +164,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog='HRpresence',
                                      description='',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
 

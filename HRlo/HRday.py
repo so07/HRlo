@@ -430,7 +430,7 @@ def main():
 
     parser = argparse.ArgumentParser(prog='HRday',
                                      description='',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
 
     HRget.add_parser(parser)

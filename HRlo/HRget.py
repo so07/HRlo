@@ -318,7 +318,7 @@ def main ():
 
     parser = argparse.ArgumentParser(prog='HRget',
                                      description='',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
 
@@ -340,7 +340,7 @@ def main ():
 
     parser.add_argument('--presence',
                         action='store_true',
-                        help="")
+                        help="get presence of worker")
 
     parser.add_argument('--dump',
                         dest = 'file_out',

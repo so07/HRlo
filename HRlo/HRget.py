@@ -18,11 +18,14 @@ class HRget(object):
     def __init__(self, HRauth, verbose=False):
         self.verbose = verbose
         self.host = HRauth.host()
+
         # set URLs
-        self.login_url  = 'https://' + self.host + '/HRPortal/servlet/cp_login'
-        self.sheet_url  = 'https://' + self.host + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
-        self.post_url   = 'https://' + self.host + '/HR-WorkFlow/servlet/SQLDataProviderServer'
-        self.portal_url = 'https://' + self.host + '/HRPortal/servlet/SQLDataProviderServer'
+        self.login_url    = 'https://' + self.host + '/HRPortal/servlet/cp_login'
+        self.sheet_url    = 'https://' + self.host + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
+        self.post_url     = 'https://' + self.host + '/HR-WorkFlow/servlet/SQLDataProviderServer'
+        self.portal_url   = 'https://' + self.host + '/HRPortal/servlet/SQLDataProviderServer'
+        self.presence_url = 'https://' + self.host + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
+
         # set employee
         self.username = HRauth.username()
         self.password = HRauth.password()
@@ -257,21 +260,41 @@ class HRget(object):
         p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
 
         try:
-           d = p.json()['Data'][:-1][0]
+           list_phone = p.json()['Data'][:-1]
         except:
            return OrderedDict()
 
-        f = p.json()['Fields']
+        fields_ = p.json()['Fields']
 
-        json = {k: v for k, v in zip(f, d)}
+        # convert data to ordered dict
 
-        ojson = OrderedDict()
+        return_ = []
 
-        for k in 'ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL':
-            if json.get(k, None):
-                ojson[k] = json[k]
+        for worker in list_phone:
 
-        return ojson
+           json = {k: v for k, v in zip(fields_, worker)}
+
+           ojson = OrderedDict()
+
+           for k in 'ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL':
+               if json.get(k):
+                   ojson[k] = json[k]
+
+           return_.append(ojson)
+
+        return return_
+
+
+    def presence(self):
+
+        p = self.session.get(self.presence_url)
+
+        csv_data = p.text
+        csv_data = csv_data.split("\n")[0:-1]
+
+        return csv_data
+
+
 
 
 def add_parser(parser):
@@ -295,7 +318,7 @@ def main ():
 
     parser = argparse.ArgumentParser(prog='HRget',
                                      description='',
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
 
@@ -314,6 +337,10 @@ def main ():
     parser.add_argument('-p', '--phone',
                         metavar = "SURNAME",
                         help="get phone number")
+
+    parser.add_argument('--presence',
+                        action='store_true',
+                        help="get presence of worker")
 
     parser.add_argument('--dump',
                         dest = 'file_out',
@@ -355,6 +382,15 @@ def main ():
 
         for d in djson:
             print(djson[d])
+
+
+    if args.presence:
+
+        csv = h.presence()
+
+        if args.verbose:
+           print(csv)
+
 
 
 

@@ -176,7 +176,7 @@ def add_parser(parser):
 
    authparser.add_argument('-c', '--config-file',
                            default = os.path.join( os.path.expanduser("~"), '.HRlo'),
-                           help='Configuration file')
+                           help='Configuration file (default %(default)s)')
 
    authparser.add_argument('-s', '--save',
                            action='store_true',
@@ -188,7 +188,7 @@ def add_parser(parser):
 
    authparser.add_argument('--password-encoding',
                            choices=['clear', 'base64'], default='base64',
-                           help='Password encoding')
+                           help='Password encoding (default %(default)s)')
 
    authparser.add_argument('--remove-config-file',
                            action='store_true',
@@ -205,7 +205,7 @@ def main ():
 
    parser = argparse.ArgumentParser(prog='',
                                     description='descriptions',
-                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                    formatter_class=argparse.RawTextHelpFormatter)
    add_parser(parser)
 
    args = parser.parse_args()

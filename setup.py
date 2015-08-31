@@ -12,6 +12,8 @@ setup(
    author_email=config.author_email,
    url=config.url,
    packages=['HRlo', 'HRlo/logs'],
-   scripts = ['bin/accaerralo', 'bin/HRlo', 'bin/HRday', 'bin/HRget'],
+   scripts = ['bin/accaerralo', 'bin/HRlo',
+              'bin/HRday', 'bin/HRget',
+              'bin/HRpresence', 'bin/HRcompany'],
 
 )

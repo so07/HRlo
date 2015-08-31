@@ -202,7 +202,8 @@ def main():
    parser_range.add_argument("--to",
                              dest = 'to_day',
                              type=_date,
-                             default=None, #default=datetime.datetime.today(),
+                             #default=None,
+                             default=datetime.date.today(),
                              metavar="YYYY-MM-DD",
                              help="To date YYYY-MM-DD")
 
@@ -255,7 +256,7 @@ def main():
 
 
    if not args.daily and not args.weekly and not args.monthly \
-      and not args.from_day and not args.to_day \
+      and not args.from_day \
       and not args.phone and not args.presence:
       print("\nToday :")
       print(hr.get_report_day())

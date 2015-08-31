@@ -9,6 +9,7 @@ from . import HRauth
 from . import HRget
 from . import HRday
 from . import HRdayList
+from . import HRpresence
 
 from . import color
 from . import config as HRconfig
@@ -135,6 +136,11 @@ class HRlo(object):
    def get_phone(self, surname):
        return self.hrget.phone(surname)
 
+   def get_presence(self, surname):
+       csv_data = self.hrget.presence()
+       presence = HRpresence.HRpresence(csv_data)
+       return presence.report(surname)
+
 
 def debug():
 
@@ -199,11 +205,13 @@ def main():
                              metavar="YYYY-MM-DD",
                              help="To date YYYY-MM-DD")
 
+   HRpresence.add_parser(parser)
+
    parser_other = parser.add_argument_group()
 
    parser_other.add_argument('-p', '--phone',
                              metavar = "SURNAME",
-                             help="get phone number")
+                             help="get worker phone number")
 
    parser_other.add_argument('--version', action='version',
                              version='%(prog)s ' + HRconfig.version,
@@ -236,8 +244,14 @@ def main():
        for k in d:
            print(d[k])
 
+   if args.presence:
+      p = hr.get_presence(args.presence)
+      print(p)
+
+
    if not args.daily and not args.weekly and not args.monthly \
-      and not args.from_day and not args.to_day and not args.phone:
+      and not args.from_day and not args.to_day \
+      and not args.phone and not args.presence:
       print("\nToday :")
       print(hr.get_report_day())
 

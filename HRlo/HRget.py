@@ -18,11 +18,14 @@ class HRget(object):
     def __init__(self, HRauth, verbose=False):
         self.verbose = verbose
         self.host = HRauth.host()
+
         # set URLs
-        self.login_url  = 'https://' + self.host + '/HRPortal/servlet/cp_login'
-        self.sheet_url  = 'https://' + self.host + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
-        self.post_url   = 'https://' + self.host + '/HR-WorkFlow/servlet/SQLDataProviderServer'
-        self.portal_url = 'https://' + self.host + '/HRPortal/servlet/SQLDataProviderServer'
+        self.login_url    = 'https://' + self.host + '/HRPortal/servlet/cp_login'
+        self.sheet_url    = 'https://' + self.host + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
+        self.post_url     = 'https://' + self.host + '/HR-WorkFlow/servlet/SQLDataProviderServer'
+        self.portal_url   = 'https://' + self.host + '/HRPortal/servlet/SQLDataProviderServer'
+        self.presence_url = 'https://' + self.host + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
+
         # set employee
         self.username = HRauth.username()
         self.password = HRauth.password()
@@ -274,6 +277,18 @@ class HRget(object):
         return ojson
 
 
+    def presence(self):
+
+        p = self.session.get(self.presence_url)
+
+        csv_data = p.text
+        csv_data = csv_data.split("\n")[0:-1]
+
+        return csv_data
+
+
+
+
 def add_parser(parser):
 
    date_parser = parser.add_argument_group('Date options')
@@ -315,6 +330,10 @@ def main ():
                         metavar = "SURNAME",
                         help="get phone number")
 
+    parser.add_argument('--presence',
+                        action='store_true',
+                        help="")
+
     parser.add_argument('--dump',
                         dest = 'file_out',
                         help="dump to file")
@@ -355,6 +374,15 @@ def main ():
 
         for d in djson:
             print(djson[d])
+
+
+    if args.presence:
+
+        csv = h.presence()
+
+        if args.verbose:
+           print(csv)
+
 
 
 

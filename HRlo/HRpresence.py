@@ -171,7 +171,6 @@ def main():
 
     args = parser.parse_args()
 
-
     auth = HRauth.HRauth(**vars(args))
 
     h = HRget.HRget(auth, verbose=False)
@@ -179,27 +178,12 @@ def main():
     # get presence in scv format
     csv_data = h.presence()
 
-
     p = HRpresence(csv_data)
-    
-    n = p.get('name', 'orlandini')
-    
-    for i in n:
-       print(i.report())
-       #print(i)
-    
-    print( p.get_all('name', 'sergio') )
-    d = p.get_all('department') 
-    b = p.get_all('boss') 
-    
-    z1 = p.get_zip_keys(['boss', 'department'])
-    z2 = p.get_zip(['boss', 'department'], ['zann'])
-    
-    #print(z2)
-    for i in z2:
-        print(i)
+
+    if args.presence:
+        print(p.report(args.presence))
 
 
 if __name__ == '__main__':
    main()
-   #debug()
+

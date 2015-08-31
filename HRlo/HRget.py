@@ -260,21 +260,29 @@ class HRget(object):
         p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
 
         try:
-           d = p.json()['Data'][:-1][0]
+           list_phone = p.json()['Data'][:-1]
         except:
            return OrderedDict()
 
-        f = p.json()['Fields']
+        fields_ = p.json()['Fields']
 
-        json = {k: v for k, v in zip(f, d)}
+        # convert data to ordered dict
 
-        ojson = OrderedDict()
+        return_ = []
 
-        for k in 'ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL':
-            if json.get(k, None):
-                ojson[k] = json[k]
+        for worker in list_phone:
 
-        return ojson
+           json = {k: v for k, v in zip(fields_, worker)}
+
+           ojson = OrderedDict()
+
+           for k in 'ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL':
+               if json.get(k):
+                   ojson[k] = json[k]
+
+           return_.append(ojson)
+
+        return return_
 
 
     def presence(self):

@@ -242,9 +242,12 @@ def main():
       print(hr.get_report_month())
 
    if args.phone:
-       d = hr.get_phone(args.phone)
-       for k in d:
-           print(d[k])
+       list_phone = hr.get_phone(args.phone)
+       for worker in list_phone:
+          print()
+          for k in worker:
+              print(worker[k])
+       print()
 
    if args.presence:
       p = hr.get_presence(args.presence)

@@ -19,7 +19,7 @@ HRlo -h
 
 ###### Simple usage for today report
 ```
-accaerralo -u USER -i IDEMPLOY -a hr.company.org
+accaerralo -u USER -i IDEMPLOY -a HR_COMPANY_URL
 Password:
 ```
 
@@ -28,15 +28,15 @@ Password:
 
 ###### Save authentication options to default config file
 ```
-accaerralo -u USER -i IDEMPLOY -a hr.company.org -s
+accaerralo -u USER -i IDEMPLOY -a HR_COMPANY_URL -s
 ```
 ###### Save authentication options to a config file
 ```
-accaerralo -u USER -i IDEMPLOY -a hr.company.org -s -c CONFIG_FILE
+accaerralo -u USER -i IDEMPLOY -a HR_COMPANY_URL -s -c CONFIG_FILE
 ```
 ###### Save also password to default config file
 ```
-accaerralo -u USER -i IDEMPLOY -a hr.company.org -s --save-password
+accaerralo -u USER -i IDEMPLOY -a HR_COMPANY_URL -s --save-password
 ```
 
 #### Reports
@@ -68,3 +68,8 @@ accaerralo --from YYYY-MM-DD --to YYYY-MM-DD
 accaerralo -p SURNAME
 ```
 
+#### Worker presence
+
+```
+accaerralo --in SURNAME
+```

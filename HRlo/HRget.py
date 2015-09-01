@@ -232,57 +232,61 @@ class HRget(object):
         return json
 
 
-    def phone(self, name):
+    def phone(self, names):
 
-        name = name.upper()
+        fields_to_return = ['ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL']
+        data_to_return   = []
 
-        # COOKIES {{{
-        cookies = self.cookies
-        # }}}
-        # HEADERS {{{
-        headers = {
-                   'Pragma': 'no-cache',
-                   'Cache-Control': 'no-cache'
-                  }
-        # }}}
-        # PARAMS  {{{
-        params = {
-                  'rows'      : '5',
-                  'startrow'  : '0',
-                  'count'     : 'true',
-                  'cmdhash'   : '8a0d2d1c35e16e1e2135a25505b5dd32',
-                  'sqlcmd'    : 'q_rubrica',
-                  'queryfilter' :"ANSURNAM like '" + name + "%'",
-                  'pANSURNAM' : '',
-                 }
-        # }}}
+        for n in names:
 
-        p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
+            name = n.upper()
 
-        try:
-           list_phone = p.json()['Data'][:-1]
-        except:
-           return OrderedDict()
+            # COOKIES {{{
+            cookies = self.cookies
+            # }}}
+            # HEADERS {{{
+            headers = {
+                       'Pragma': 'no-cache',
+                       'Cache-Control': 'no-cache'
+                      }
+            # }}}
+            # PARAMS  {{{
+            params = {
+                      'rows'      : '5',
+                      'startrow'  : '0',
+                      'count'     : 'true',
+                      'cmdhash'   : '8a0d2d1c35e16e1e2135a25505b5dd32',
+                      'sqlcmd'    : 'q_rubrica',
+                      'queryfilter' :"ANSURNAM like '" + name + "%'",
+                      'pANSURNAM' : '',
+                     }
+            # }}}
 
-        fields_ = p.json()['Fields']
+            p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
 
-        # convert data to ordered dict
+            try:
+               list_phone = p.json()['Data'][:-1]
+            except:
+               return OrderedDict()
 
-        return_ = []
+            fields_ = p.json()['Fields']
 
-        for worker in list_phone:
+            # convert data to ordered dict
 
-           json = {k: v for k, v in zip(fields_, worker)}
+            json_ = {}
 
-           ojson = OrderedDict()
+            for worker in list_phone:
+               json = {k: v for k, v in zip(fields_, worker)}
+               l = []
+               for k in fields_to_return:
+                  if json.get(k):
+                     l.append(json[k])
+               data_to_return.append(l)
 
-           for k in 'ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL':
-               if json.get(k):
-                   ojson[k] = json[k]
+        json_['Fields'] = fields_to_return
+        json_['Data']   = data_to_return
 
-           return_.append(ojson)
-
-        return return_
+        return json_
 
 
     def presence(self):
@@ -290,7 +294,6 @@ class HRget(object):
         p = self.session.get(self.presence_url)
 
         csv_data = p.text
-        csv_data = csv_data.split("\n")[0:-1]
 
         return csv_data
 
@@ -335,6 +338,8 @@ def main ():
                         help="get tot")
 
     parser.add_argument('-p', '--phone',
+                        nargs = '+',
+                        action = NameParser,
                         metavar = "SURNAME",
                         help="get phone number")
 
@@ -353,53 +358,67 @@ def main ():
 
     auth = HRauth.HRauth(**vars(args))
 
-    h = HRget(auth, verbose=args.verbose)
+    hr_get = HRget(auth, verbose=args.verbose)
 
 
     if args.get:
 
-       djson = h.get(year=args.year, month=args.month, day=args.day)
+        djson = hr_get.get(year=args.year, month=args.month, day=args.day)
 
-       if args.verbose:
-          for k, v in zip(djson['Fields'], djson['Data']):
-             print(k, " = ", v)
+        if args.verbose:
+            for k, v in zip(djson['Fields'], djson['Data']):
+                print(k, " = ", v)
+
+        if args.file_out:
+            with open(args.file_out, 'w') as f:
+                json.dump(djson, f)
+            #with open(args.file_out, 'r') as f:
+            #    djson = json.load(f)
 
 
     if args.tot:
 
-       djson = h.tot(year=args.year, month=args.month)
+        djson = hr_get.tot(year=args.year, month=args.month)
 
-       if args.verbose:
-          for d in djson['Data']:
-              for k, v in zip(djson['Fields'], d):
-                 print(k, " = ", v)
-              print()
+        if args.verbose:
+            for d in djson['Data']:
+                for k, v in zip(djson['Fields'], d):
+                    print(k, " = ", v)
+                print()
+
+        if args.file_out:
+            with open(args.file_out, 'w') as f:
+                json.dump(djson, f)
 
 
     if args.phone:
 
-        djson = h.phone(args.phone)
+        djson = hr_get.phone(args.phone)
 
-        for d in djson:
-            print(djson[d])
+        print()
+        for d in djson['Data']:
+            for k, v in zip(djson['Fields'], d):
+                print(v)
+            print()
+
+        if args.file_out:
+            with open(args.file_out, 'a') as f:
+                json.dump(djson, f)
 
 
     if args.presence:
 
-        csv = h.presence()
+        csv = hr_get.presence()
 
         if args.verbose:
-           print(csv)
+            print(csv)
 
+        if args.file_out:
+            with open(args.file_out, 'w') as f:
+                f.write(csv)
 
-
-
-    if args.file_out:
-        with open(args.file_out, 'w') as f:
-            json.dump(djson, f)
-        #with open(args.file_out, 'r') as f:
-        #    djson = json.load(f)
 
 
 if __name__ == '__main__':
     main()
+

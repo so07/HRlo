@@ -49,8 +49,8 @@ class presence (HashedDict):
             self['office'], self['room'],
             self['department'], self['boss'],
             )
-        #if self['proof tomorrow'] or self['city tomorrow'] or self['state tomorrow']:
-        #    s += """{} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
+        if self['proof tomorrow'] or self['city tomorrow'] or self['state tomorrow']:
+            s += """{} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
         return s
 
     def is_like (self, key, value):
@@ -69,6 +69,7 @@ class presence (HashedDict):
 class HRpresence (object):
 
     def __init__ (self, csv_data):
+        self.csv_data = csv_data
         self.raw_presence = [ presence(r) for r in self._csv_read(csv_data) ]
         self.presence = self._csv_refine()
 
@@ -88,13 +89,27 @@ class HRpresence (object):
         return _refined
         
     def _csv_read(self, csv_data):
-        reader = csv.reader(csv_data, delimiter=';')
-        reader = csv.DictReader(csv_data, delimiter=';')
+        # convert csv data from string to list
+        list_csv_data = csv_data.split('\n')
+        #reader = csv.reader(list_csv_data, delimiter=';')
+        reader = csv.DictReader(list_csv_data, delimiter=';')
         return reader
 
     def _cvs_write(self):
         pass
-    def dump_data(self, raw=True):
+
+    def dump_csv(self, file_out):
+        with open(file_out, 'w') as f:
+            f.write(self.csv_data)
+
+    @classmethod
+    def read_csv(self, file_input):
+        with open(file_input, 'r') as f:
+            csv_data = f.read()
+        return csv_data
+
+
+    def dump_data(self, file_out, raw=True):
         pass
 
     def __len__(self):
@@ -154,8 +169,9 @@ def add_parser(parser):
 
    _parser.add_argument('--in', '--is_present',
                         dest = 'presence',
-                        metavar = 'SURNAME',
+                        nargs='+',
                         action = NameParser,
+                        metavar = 'SURNAME',
                         help='get report on worker')
 
 
@@ -168,21 +184,41 @@ def main():
 
     add_parser(parser)
 
+    parser.add_argument('--dump',
+                        dest = 'file_out',
+                        help='dump data to file in csv format')
+
+    parser.add_argument('--read',
+                        dest = 'file_input',
+                        help='read data from file in csv format')
+
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
 
-    auth = HRauth.HRauth(**vars(args))
 
-    h = HRget.HRget(auth, verbose=False)
+    if args.file_input:
 
-    # get presence in scv format
-    csv_data = h.presence()
+        csv_data = HRpresence.read_csv(args.file_input)
+
+    else:
+
+        auth = HRauth.HRauth(**vars(args))
+
+        h = HRget.HRget(auth, verbose=False)
+
+        # get presence in scv format
+        csv_data = h.presence()
+
 
     p = HRpresence(csv_data)
 
     if args.presence:
-        print(p.report(args.presence))
+        for name in args.presence:
+            print(p.report(name))
+
+    if args.file_out:
+        p.dump_csv(args.file_out)
 
 
 if __name__ == '__main__':

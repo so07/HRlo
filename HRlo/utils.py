@@ -40,6 +40,6 @@ def refine_string(_str):
 class NameParser(argparse.Action):
 
      def __call__(self, parser, namespace, values, option_string=None):
-         values = refine_string(values)
+         values = [ refine_string(i) for i in values ]
          setattr(namespace, self.dest, values)
 

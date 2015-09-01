@@ -9,7 +9,8 @@ import json
 
 from collections import OrderedDict
 
-from HRlo.logs import dayutils
+from HRlo.logs  import dayutils
+from HRlo.utils import NameParser
 
 from HRlo import HRauth
 
@@ -91,7 +92,7 @@ class HRget(object):
 
     def _check_data(self, d, year, month, day):
 
-        if len(d) < 2:
+        if len(d) < 1:
             print("[HRget] ***ERROR***")
             print("Data not found in date {}-{}".format(year, month) )
             sys.exit(-1)
@@ -101,10 +102,8 @@ class HRget(object):
                   month = datetime.datetime.today().month,
                   day   = None):
 
-
         str_month = "{:0>2}".format(month)
         str_year  = "{:d}".format(year)
-
 
         num_days_in_month = calendar.monthrange(year, month)[1]
 
@@ -171,6 +170,7 @@ class HRget(object):
         p = self.session.post(self.sheet_url, cookies=cookies)
 
         p = self.session.post(self.post_url, headers=headers, cookies=cookies, params=params)
+
 
         d = p.json()['Data'][:last_day]
         f = p.json()['Fields']

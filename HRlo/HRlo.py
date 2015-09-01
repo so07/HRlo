@@ -258,8 +258,10 @@ def main():
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day \
       and not args.phone and not args.presence:
-      print("\nToday :")
-      print(hr.get_report_day())
+      today = hr.get_report_day()
+      if today:
+          print("\nToday :")
+          print(today)
 
 
 if __name__ == '__main__':

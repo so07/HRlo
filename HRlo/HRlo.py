@@ -210,8 +210,9 @@ def main():
    parser_other = parser.add_argument_group()
 
    parser_other.add_argument('-p', '--phone',
-                             metavar = "SURNAME",
                              action = NameParser,
+                             nargs = '+',
+                             metavar = "SURNAME",
                              help="get worker phone number")
 
    parser_other.add_argument('--version', action='version',
@@ -241,16 +242,17 @@ def main():
       print(hr.get_report_month())
 
    if args.phone:
-       list_phone = hr.get_phone(args.phone)
-       for worker in list_phone:
-          print()
-          for k in worker:
-              print(worker[k])
+       djson = hr.get_phone(args.phone)
        print()
+       for d in djson['Data']:
+           for k, v in zip(djson['Fields'], d):
+               print(v)
+           print()
 
    if args.presence:
-      p = hr.get_presence(args.presence)
-      print(p)
+      for name in args.presence:
+          p = hr.get_presence(name)
+          print(p)
 
 
    if not args.daily and not args.weekly and not args.monthly \

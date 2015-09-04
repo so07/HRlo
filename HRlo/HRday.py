@@ -329,8 +329,8 @@ class HRday(DayLog):
         """
         sep = self.sep_descr
         for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
-           if k.startswith(key):
-           #if key in k:
+           #if k.startswith(key):
+           if key in k:
                return self._unit_hr2timedelta(v)
         return datetime.timedelta(0)
 

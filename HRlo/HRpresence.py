@@ -36,7 +36,7 @@ class presence (HashedDict):
     def report (self):
         s  = "{} : {} {}\n".format(self['name'], self['status'], self['proof'])
         s += "{}\n".format(self['email'])
-        s += "{} {}\n".format(self['phone'], self['company phone'])
+        s += "{}  {}\n".format(self['phone'], self['company phone'])
         s = """{} : {}  {} {} {}
         {}
         {} {}
@@ -50,7 +50,8 @@ class presence (HashedDict):
             self['department'], self['boss'],
             )
         if self['proof tomorrow'] or self['city tomorrow'] or self['state tomorrow']:
-            s += """{} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
+            s += """
+        TOMORROW: {} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
         return s
 
     def is_like (self, key, value):

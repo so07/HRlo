@@ -47,7 +47,7 @@ class HRday(DayLog):
         self._hr_time = {}
 
         self._hr_time['net'] = 0
-        for k in ['up', 'ko', 'rol', 'trip', 'mission']:
+        for k in list(self.time_hash.keys()) + ['up']:
            self._hr_time[k] = datetime.timedelta(0)
 
         DayLog.__init__(self)

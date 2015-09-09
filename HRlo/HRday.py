@@ -47,7 +47,7 @@ class HRday(DayLog):
         self._hr_time = {}
 
         self._hr_time['net'] = 0
-        for k in ['up', 'ko', 'rol', 'trip', 'mission']:
+        for k in list(self.time_hash.keys()) + ['up']:
            self._hr_time[k] = datetime.timedelta(0)
 
         DayLog.__init__(self)
@@ -116,16 +116,25 @@ class HRday(DayLog):
        if self.label:
           s += "."*20 + "{}\n".format(self.label)
 
+       # date
        s += "{:.<20}".format( "Date" )
        s += "{}\n".format( str(self._date.date()) )
+
+       # uptime
        s += "{:.<20}".format( "Uptime" )
        s += "{:<10}".format( dayutils.sec2str(self._uptime.total_seconds()) )
-       s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_time['up'].total_seconds()) )
+       if not self.is_today():
+          s += " {} ".format( "for HR" )
+          s += "{}".format( dayutils.sec2str(self._hr_time['up'].total_seconds()) )
+       s += '\n'
+
+       # timenet
        s += "{:.<20}".format( "Timenet" )
        s += "{:<10}".format( dayutils.sec2str(self.timenet()) )
-       s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_time['net']) )
+       if not self.is_today():
+          s += " {} ".format( "for HR" )
+          s += "{}".format( dayutils.sec2str(self._hr_time['net']) )
+       s += '\n'
 
        s += "{:.<20}".format( "Lunch" )
        s += "{}\n".format( self._lunch )

@@ -26,11 +26,13 @@ class HRday(DayLog):
 
     sep_descr = '&&&'
 
-    time_hash = {'ko'      : 'KO', # NB: KO is time for lunch to subtract from uptime.
-                 'rol'     : 'ROL',
-                 'dayoff'  : 'FERIE',
-                 'mission' : 'MISSIONE',
-                 'trip'    : 'TRASFERTA'}
+    time_hash = {'ko'           : 'ORE KO', # NB: KO is time for lunch to subtract from uptime.
+                 'rol'          : 'ROL',
+                 'dayoff'       : 'FERIE',
+                 'mission'      : 'MISSIONE',
+                 'trip'         : 'TRASFERTA',
+                 'bankhours'    : 'BANCA ORE GODUTA',
+                 'bloodletting' : 'DONAZIONE SANGUE'}
 
     def __init__(self, field = None, data = None, label = None):
 
@@ -77,12 +79,12 @@ class HRday(DayLog):
         # get uptime/nettime for HR
         self._hr_time['up'], self._hr_time['net'] = self._get_hr_times()
 
-        for k in ['ko', 'rol', 'trip', 'mission', 'dayoff']:
+        for k in ['ko', 'rol', 'trip', 'mission', 'dayoff', 'bloodletting']:
            self._hr_time[k] = self._get_hr_time(self.time_hash[k])
 
 
         # update uptime with mission/business trip times
-        for k in ['trip', 'mission']:
+        for k in ['trip', 'mission', 'bloodletting']:
            self._uptime += self._hr_time[k]
 
         sep = self.sep_descr
@@ -257,7 +259,7 @@ class HRday(DayLog):
           exc -= self._get_hr_time(self.time_hash[k])
 
        # times to add
-       for k in ['rol', 'trip', 'mission', 'dayoff']:
+       for k in ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'bloodletting']:
           exc += self._get_hr_time(self.time_hash[k])
 
        # convert in seconds
@@ -309,7 +311,7 @@ class HRday(DayLog):
        _hr_work_time = datetime.timedelta( seconds=_hr_work_time_sec )
 
        # times to subtract
-       for k in ['rol', 'dayoff']:
+       for k in ['rol', 'dayoff', 'bankhours', 'bloodletting']:
           _hr_work_time -= self._get_hr_time(self.time_hash[k])
 
        _time_sec  = _hr_work_time.total_seconds()
@@ -338,8 +340,8 @@ class HRday(DayLog):
         """
         sep = self.sep_descr
         for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
-           #if k.startswith(key):
-           if key in k:
+           if k.startswith(key):
+           #if key in k:
                return self._unit_hr2timedelta(v)
         return datetime.timedelta(0)
 
@@ -369,6 +371,9 @@ class HRday(DayLog):
        # check for total rol day
        if self.is_rol_total():
           return False
+       # check for bloodletting
+       if self.is_bloodletting():
+           return False
        return True
 
     def is_mission(self):
@@ -408,6 +413,12 @@ class HRday(DayLog):
            return True
         else:
            return False
+
+    def is_bankhours(self):
+       return self._get_hr_time(self.time_hash['bankhours'])
+
+    def is_bloodletting(self):
+       return self._get_hr_time(self.time_hash['bloodletting'])
 
 
     def is_today(self):

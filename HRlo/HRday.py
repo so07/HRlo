@@ -34,21 +34,6 @@ class HRday(DayLog):
                  'bankhours'    : 'BANCA ORE GODUTA',
                  'bloodletting' : 'DONAZIONE SANGUE'}
 
-    def _init_times (self):
-
-        self['timenet'] = 0
-        self['anomaly'] = 0
-
-        self['HR working time'] = 0
-        self['lunch'] = 0
-        self['mission'] = 0
-
-        self['HR times'] = {}
-
-        self['HR times']['net'] = 0
-        for k in list(self.time_hash.keys()) + ['up']:
-           self['HR times'][k] = datetime.timedelta(0)
-
 
     def __init__(self, field = None, data = None, label = None):
 
@@ -114,7 +99,6 @@ class HRday(DayLog):
                   self['lunch'] = int(float(v))
                if 'DI MISSIONE' in k:
                   self['mission'] = int(float(v))
-
 
 
     def __str__ (self):
@@ -194,21 +178,10 @@ class HRday(DayLog):
 
        return s
 
-    def _unit_hr2seconds(self, hrtime):
-        # convert to second
-        return float(hrtime) *60.0*60.0
-    def _unit_hr2timedelta(self, hrtime):
-        return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
-
-    def _is_number(self, s):
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
 
     def __repr__(self):
        return str(self.date().date())
+
 
     def __add__(self, other):
 
@@ -233,25 +206,36 @@ class HRday(DayLog):
        return a
 
 
-    def anomaly(self):
-        return self['anomaly']
+    def _init_times (self):
 
-    def timenet(self):
-       return self['timenet']
+        self['timenet'] = 0
+        self['anomaly'] = 0
 
-    def remains(self, fmt = None):
-        if not self.is_today():
-           return None
-        r = self.HR_workday - self.uptime()
-        if r.total_seconds() < 0:
-           return datetime.timedelta(0)
-        else:
-           return r
+        self['HR working time'] = 0
+        self['lunch'] = 0
+        self['mission'] = 0
 
-    def exit(self, fmt = None):
-        if not self.is_today():
-           return None
-        return  (self._now + self.remains()).time()
+        self['HR times'] = {}
+
+        self['HR times']['net'] = 0
+        for k in list(self.time_hash.keys()) + ['up']:
+           self['HR times'][k] = datetime.timedelta(0)
+
+
+    def _unit_hr2seconds(self, hrtime):
+        # convert to second
+        return float(hrtime) *60.0*60.0
+
+    def _unit_hr2timedelta(self, hrtime):
+        return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
+
+    def _is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
 
     def _get_timenet(self):
 
@@ -354,6 +338,30 @@ class HRday(DayLog):
         return datetime.timedelta(0)
 
 
+    def anomaly(self):
+        return self['anomaly']
+
+
+    def timenet(self):
+       return self['timenet']
+
+
+    def remains(self, fmt = None):
+        if not self.is_today():
+           return None
+        r = self.HR_workday - self.uptime()
+        if r.total_seconds() < 0:
+           return datetime.timedelta(0)
+        else:
+           return r
+
+
+    def exit(self, fmt = None):
+        if not self.is_today():
+           return None
+        return  (self._now + self.remains()).time()
+
+
     def is_holiday(self):
        """Return True if day is an holiday otherwise return False.
           Check if DESCRORARIO key is equal to SABATO, DOMENICA, FESTIVO.
@@ -384,12 +392,14 @@ class HRday(DayLog):
            return False
        return True
 
+
     def is_mission(self):
        if self.get('mission'):
        #if hasattr(self, '_mission') and self._mission:
            return True
        else:
            return False
+
 
     def is_transfer(self):
        return self._get_hr_time(self.time_hash['trip'])
@@ -408,6 +418,7 @@ class HRday(DayLog):
         """
         return self._get_hr_time(self.time_hash['rol'])
 
+
     def is_rol_total(self):
         """Check for entire day ROL.
            Return bool.
@@ -423,8 +434,10 @@ class HRday(DayLog):
         else:
            return False
 
+
     def is_bankhours(self):
        return self._get_hr_time(self.time_hash['bankhours'])
+
 
     def is_bloodletting(self):
        return self._get_hr_time(self.time_hash['bloodletting'])

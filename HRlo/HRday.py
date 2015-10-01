@@ -34,10 +34,7 @@ class HRday(DayLog):
                  'bankhours'    : 'BANCA ORE GODUTA',
                  'bloodletting' : 'DONAZIONE SANGUE'}
 
-    def __init__(self, field = None, data = None, label = None):
-
-        self._now = datetime.datetime.today()
-        self['label'] = label
+    def _init_times (self):
 
         self['timenet'] = 0
         self['anomaly'] = 0
@@ -52,6 +49,14 @@ class HRday(DayLog):
         for k in list(self.time_hash.keys()) + ['up']:
            self['HR times'][k] = datetime.timedelta(0)
 
+
+    def __init__(self, field = None, data = None, label = None):
+
+        self._now = datetime.datetime.today()
+        self['label'] = label
+
+        self._init_times()
+
         DayLog.__init__(self)
 
         if not field and not data:
@@ -59,11 +64,15 @@ class HRday(DayLog):
 
         self.HR = {k: v for k, v in zip(field, data)}
 
+        # get date from HR
         date = datetime.datetime.strptime(self.HR['DATA'], "%Y-%m-%d")
+        # get logs from TIMBRATURE of HR
         logs = self.re_logs.findall( self.HR['TIMBRATURE'] )
 
+        # refine HR logs
         logs = [ i[0:2] + ':' + i[2:4] for i in logs ]
 
+        # add now logs if today and odd logs
         if date.date() == self._now.date() and len(logs)%2:
             logs.append( self._now.strftime('%H:%M') )
 
@@ -72,7 +81,6 @@ class HRday(DayLog):
         self['anomaly'] = int(self.HR['ANOMALIE'])
 
         self['timenet'] = self._get_timenet()
-
 
         # get working time to do for HR
         self['HR working time'] = self._get_hr_real_work_time()
@@ -208,7 +216,7 @@ class HRday(DayLog):
 
        sum_daylog = DayLog.__add__(self, other)
 
-       a['logs'] = sum_daylog.logs()
+       a['logs']   = sum_daylog.logs()
        a['date']   = sum_daylog.date()
        a['uptime'] = sum_daylog.uptime()
 

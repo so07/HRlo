@@ -11,10 +11,10 @@ class HRdayList(list):
 
        self.hrday = HRday.HRday()
 
-       self._hr_time = {}
-       self._hr_time['net'] = 0
-       for k in list(HRday.HRday.time_hash.keys()) + ['up']:
-           self._hr_time[k] = datetime.timedelta(0)
+       #self_hr_time = {}
+       #self._hr_time['net'] = 0
+       #for k in list(HRday.HRday.time_hash.keys()) + ['up']:
+       #    self._hr_time[k] = datetime.timedelta(0)
 
        self.label = label
 
@@ -34,11 +34,11 @@ class HRdayList(list):
        s += "{:.<20}".format( "Uptime" )
        s += "{:<10}".format( dayutils.sec2str(self.hrday['uptime'].total_seconds()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_time['up'].total_seconds()) )
+       s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['up'].total_seconds()) )
        s += "{:.<20}".format( "Timenet" )
        s += "{:<10}".format( dayutils.sec2str(self.hrday.timenet()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self._hr_time['net']) )
+       s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['net']) )
        s += "{:.<20}".format( "Uptime mean" )
        s += "{}\n".format( dayutils.sec2str(self.uptime_mean().total_seconds()) )
        s += "{:.<20}".format( "Timenet mean" )
@@ -63,10 +63,10 @@ class HRdayList(list):
        self.hrday['uptime'] += args.uptime()
 
        for k in list(HRday.HRday.time_hash.keys()) + ['up', 'net']:
-          self._hr_time[k] += args._hr_time[k]
+          self.hrday['HR times'][k] += args['HR times'][k]
 
        if not args.anomaly() and not args.is_holiday():
-          self.hrday._timenet += args.timenet()
+          self.hrday['timenet'] += args.timenet()
 
 
     def _getattr_from_HRday(self, attr):

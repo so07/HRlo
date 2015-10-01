@@ -85,7 +85,7 @@ class HRday(DayLog):
 
         # update uptime with mission/business trip times
         for k in ['trip', 'mission', 'bloodletting']:
-           self._uptime += self._hr_time[k]
+           self['uptime'] += self._hr_time[k]
 
         sep = self.sep_descr
         # read from DESCRIZIONE1 field
@@ -111,7 +111,7 @@ class HRday(DayLog):
 
     def __str__ (self):
        s = ''
-       if not self._date:
+       if not self.date():
            return s
        #s += DayLog.__str__(self) + '\n'
 
@@ -120,11 +120,11 @@ class HRday(DayLog):
 
        # date
        s += "{:.<20}".format( "Date" )
-       s += "{}\n".format( str(self._date.date()) )
+       s += "{}\n".format( str(self.date().date()) )
 
        # uptime
        s += "{:.<20}".format( "Uptime" )
-       s += "{:<10}".format( dayutils.sec2str(self._uptime.total_seconds()) )
+       s += "{:<10}".format( dayutils.sec2str(self.uptime().total_seconds()) )
        if not self.is_today():
           s += " {} ".format( "for HR" )
           s += "{}".format( dayutils.sec2str(self._hr_time['up'].total_seconds()) )
@@ -169,9 +169,9 @@ class HRday(DayLog):
           s += "{:.<20}".format( "Mission" )
           s += "{}\n".format( self._mission )
 
-       if self._logs:
+       if self.logs():
           s += "{:.<20}".format( "TimeStamps" )
-          s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self._logs]) )
+          s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self.logs()]) )
 
        s += "{:.<20}".format( "Anomaly" )
        s += "{}\n".format( str(self.anomaly()) )
@@ -200,7 +200,7 @@ class HRday(DayLog):
             return False
 
     def __repr__(self):
-       return str(self._date.date())
+       return str(self.date().date())
 
     def __add__(self, other):
 
@@ -208,9 +208,9 @@ class HRday(DayLog):
 
        sum_daylog = DayLog.__add__(self, other)
 
-       a._logs = sum_daylog._logs
-       a._date = sum_daylog._date
-       a._uptime = sum_daylog._uptime
+       a['logs'] = sum_daylog.logs()
+       a['date']   = sum_daylog.date()
+       a['uptime'] = sum_daylog.uptime()
 
        a._timenet = self._timenet + other._timenet
        a._anomaly = self._anomaly + other._anomaly
@@ -234,7 +234,7 @@ class HRday(DayLog):
     def remains(self, fmt = None):
         if not self.is_today():
            return None
-        r = self.HR_workday - self._uptime
+        r = self.HR_workday - self.uptime()
         if r.total_seconds() < 0:
            return datetime.timedelta(0)
         else:
@@ -248,11 +248,11 @@ class HRday(DayLog):
     def _get_timenet(self):
 
        # CHANGEIT
-       d = self._date.weekday()
+       d = self.date().weekday()
        if d == 5 or d == 6:
           return 0
 
-       exc = self._uptime - self.HR_workday
+       exc = self.uptime() - self.HR_workday
 
        # times to subtract
        for k in ['ko']:
@@ -273,12 +273,12 @@ class HRday(DayLog):
 
         if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
             print("[HRday] ***ERROR***")
-            print("Worker not employed in date", self._date.date())
+            print("Worker not employed in date", self.date().date())
             sys.exit(-1)
 
         if not self._is_number(time_[0]) or not self._is_number(time_[1]):
             print("[HRday] ***ERROR***")
-            print("HR Time not well defined on date", self._date.date())
+            print("HR Time not well defined on date", self.date().date())
             #print(type_, time_)
             sys.exit(-1)
 
@@ -422,7 +422,7 @@ class HRday(DayLog):
 
 
     def is_today(self):
-       if self._date.date() == self._now.date():
+       if self.date().date() == self._now.date():
           return True
        else:
           return False

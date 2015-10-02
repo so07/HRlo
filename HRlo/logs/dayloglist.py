@@ -15,7 +15,7 @@ class DayLogList(list):
 
        # date
        s += "{:.<20}".format("Date")
-       s += "{}\n".format( ", ".join([ i.date() for i in self ]))
+       s += "{}\n".format( ", ".join([ i.date(True) for i in self ]))
 
        # uptime per day
        s += " "*7 + "{:.<20}".format("Up")

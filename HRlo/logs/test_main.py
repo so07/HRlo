@@ -29,6 +29,21 @@ def main():
    print(">>> logouts()")
    print(d.logouts())
 
+   time_start = datetime.time(10, 4)
+   time_final = datetime.time(10, 5)
+
+   dstart = datetime.datetime.combine(datetime.date.today(), time_start)
+   dfinal = datetime.datetime.combine(datetime.date.today(), time_final)
+   print(">>> starting time")
+   print(dstart)
+
+   print(">>> uptime from starting time")
+   print(d.uptime(dstart))
+
+   print(">>> ending time")
+   print(dfinal)
+   print(d.uptime(dstart, dfinal))
+
    d1 = DayLog(datetime.datetime.today(), ['09:03', '10:13'])
    d2 = DayLog(datetime.datetime.today(), ['11:03', '12:13'])
 

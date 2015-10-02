@@ -163,6 +163,7 @@ def main():
 
    print( "sec2str", sec2str(t.total_seconds()) )
 
+
    day1 = datetime.datetime(2015, 3, 3)
    day2 = datetime.datetime(2015, 4, 12)
 

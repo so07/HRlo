@@ -2,7 +2,11 @@
 import re
 import datetime
 
-from . import dayutils
+# CHANGEIT
+try:
+    from . import dayutils
+except:
+    import dayutils
 
 
 def pairwise(l):
@@ -19,7 +23,7 @@ class DayLog(dict):
    """
 
    def __init__ (self, date = None, logs = None):
-      """__init__(date, logs)
+      """__init__(date, logs).
       """
 
       # date of day
@@ -59,9 +63,42 @@ class DayLog(dict):
    def __radd__(self, other):
       return self.__add__(other)
 
+   def _get_uptime_from(self, start, final):
+       """Return uptimes between start and final times."""
+
+       assert isinstance(start, datetime.datetime), \
+              "@_get_uptime_from start is not datetime.datetime: %s %s" % \
+              (type(start), start)
+
+       assert isinstance(final, datetime.datetime), \
+              "@_get_uptime_from final is not datetime.datetime: %s %s" % \
+              (type(final), final)
+
+       _time = datetime.timedelta(0)
+
+       for i, o in pairwise(self['logs']):
+
+          if start > o or final < i:
+             continue
+
+          i1 = start
+          i2 = final
+
+          if start < i:
+             i1 = i
+
+          if final > o:
+             i2 = o
+
+          _time += i2 - i1
+
+       return _time
+
+
    def id (self):
-      """Return date in format YYYYMMDD"""
+      """Return date in format YYYYMMDD."""
       return self['date'].strftime(dayutils.fmt_id)
+
 
    def date (self, fmt=False):
       """Return date.
@@ -71,41 +108,62 @@ class DayLog(dict):
       else:
          return self['date']
 
+
    def day (self):
-      """Return date (datetime class)"""
+      """Return date (datetime class).
+         (Deprecated).
+      """
       return self['date']
 
-   def uptime(self):
-      """Return uptime in seconds"""
-      return self['uptime']
+
+   def uptime(self, start=None, final=datetime.datetime.now()):
+      """Return uptime in seconds.
+         If start and final is defined return uptime in seconds between start and final times.
+      """
+      if start:
+         return self._get_uptime_from(start, final)
+      else:
+         return self['uptime']
+
 
    def uptimes(self, fmt = None):
+       """Return list of uptimes.
+          If fmt=True return string with uptimes in format mode.
+       """
        ups = [ o-i for i, o in pairwise(self['logs']) ]
        if fmt:
            return [ dayutils.sec2str(u.total_seconds())  for u in ups ]
        else:
            return ups
 
-   def login (self):
-      """Return earlier login"""
-      return self['logs'][0]
-
-   def logout (self):
-      """Return latest login"""
-      return self['logs'][-1]
-
-   def logins (self):
-      """Return list of all logins"""
-      return [i for i, o in pairwise(self['logs']) ]
-
-   def logouts (self):
-      """Return list of all logouts"""
-      return [o for i, o in pairwise(self['logs']) ]
 
    def logs (self, fmt = None):
-      """Return list of logs"""
+      """Return list of logs.
+         If fmt=True return string with logs in format mode.
+      """
       if fmt:
          return [ i.strftime(fmt) for i in self['logs']]
       else:
          return self['logs']
+
+
+   def login (self):
+      """Return earlier login."""
+      return self['logs'][0]
+
+
+   def logout (self):
+      """Return latest login."""
+      return self['logs'][-1]
+
+
+   def logins (self):
+      """Return list of logins."""
+      return [i for i, o in pairwise(self['logs']) ]
+
+
+   def logouts (self):
+      """Return list of logouts."""
+      return [o for i, o in pairwise(self['logs']) ]
+
 

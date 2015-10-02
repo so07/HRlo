@@ -23,35 +23,35 @@ class HRdayList(list):
        s = ''
 
        if self.label:
-          s += "."*20 + "{}\n".format(self.label)
+          s += "."*25 + "{}\n".format(self.label)
 
-       s += "{:.<20}".format("Working days")
+       s += "{:.<25}".format("Working days")
        s += "{}\n".format( ", ".join([ str(i.day().date()) for i in self if i.is_working()]))
-       s += "{:.<20}".format("Num. Working days")
+       s += "{:.<25}".format("Num. Working days")
        s += "{}\n".format( self.working_days_number() )
-       #s += "{:.<20}".format("Working days list")
+       #s += "{:.<25}".format("Working days list")
        #s += "{}\n".format( self.working_days_list() )
-       s += "{:.<20}".format( "Uptime" )
+       s += "{:.<25}".format( "Uptime" )
        s += "{:<10}".format( dayutils.sec2str(self.hrday['uptime'].total_seconds()) )
        s += " {} ".format( "for HR" )
        s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['up'].total_seconds()) )
-       s += "{:.<20}".format( "Timenet" )
+       s += "{:.<25}".format( "Timenet" )
        s += "{:<10}".format( dayutils.sec2str(self.hrday.timenet()) )
        s += " {} ".format( "for HR" )
        s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['net']) )
-       s += "{:.<20}".format( "Uptime mean" )
+       s += "{:.<25}".format( "Uptime mean" )
        s += "{}\n".format( dayutils.sec2str(self.uptime_mean().total_seconds()) )
-       s += "{:.<20}".format( "Timenet mean" )
+       s += "{:.<25}".format( "Timenet mean" )
        s += "{}\n".format( dayutils.sec2str(self.timenet_mean()) )
-       #s += "{:.<20}".format("Logs")
+       #s += "{:.<25}".format("Logs")
        #for j in self:
        #   s += "[{}] ".format(", ".join([ i.time().strftime(dayutils.fmt_time) for i in j.logs() ]))
        #s += '\n'
 
-       s += "{:.<20}".format("Timenets")
+       s += "{:.<25}".format("Timenets")
        s += "[{}]\n".format( ", ".join([ dayutils.sec2str(d.timenet()) for d in self if d.is_working()]) )
 
-       s += "{:.<20}".format( "Anomaly" )
+       s += "{:.<25}".format( "Anomaly" )
        s += "{}\n".format( self.anomaly() )
 
        return s

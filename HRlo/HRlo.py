@@ -3,8 +3,8 @@ import re
 import sys
 import datetime
 
-from HRlo.logs import dayutils
-from HRlo.utils import HashedDict, NameParser
+from logs import dayutils
+from utils import NameParser
 
 from . import HRauth
 from . import HRget

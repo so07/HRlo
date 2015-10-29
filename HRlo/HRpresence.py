@@ -3,10 +3,10 @@ import csv
 import argparse
 import itertools
 
-from HRlo.utils import HashedDict, NameParser
+from utils import HashedDict, NameParser
 
-from . import HRauth
-from . import HRget
+from HRlo import HRauth
+from HRlo import HRget
 
 class presence (HashedDict):
 

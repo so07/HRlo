@@ -12,7 +12,7 @@ from collections import OrderedDict
 from .logs  import dayutils
 from .utils import NameParser
 
-from HRlo import HRauth
+from . import HRauth
 
 class HRget(object):
 

@@ -6,11 +6,11 @@ import datetime
 from .logs import dayutils
 from .utils import NameParser
 
-from HRlo import HRauth
-from HRlo import HRget
-from HRlo import HRday
-from HRlo import HRdayList
-from HRlo import HRpresence
+from . import HRauth
+from . import HRget
+from . import HRday
+from . import HRdayList
+from . import HRpresence
 
 from . import color
 from . import config as HRconfig

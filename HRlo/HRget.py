@@ -9,8 +9,8 @@ import json
 
 from collections import OrderedDict
 
-from logs  import dayutils
-from utils import NameParser
+from HRlo.logs  import dayutils
+from HRlo.utils import NameParser
 
 from HRlo import HRauth
 

@@ -3,7 +3,7 @@ import csv
 import argparse
 import itertools
 
-from utils import HashedDict, NameParser
+from HRlo.utils import HashedDict, NameParser
 
 from HRlo import HRauth
 from HRlo import HRget

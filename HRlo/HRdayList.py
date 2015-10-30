@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import datetime
 
-from HRlo.logs import dayutils
+from .logs import dayutils
 
 from HRlo import HRday
 

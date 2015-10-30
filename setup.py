@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 from distutils.core import setup
 
+try:
+   from distutils.command.build_py import build_py_2to3 as build_py
+except ImportError:
+   from distutils.command.build_py import build_py
+
 from HRlo import config
 
 setup(
@@ -15,5 +20,6 @@ setup(
    scripts = ['bin/accaerralo', 'bin/HRlo',
               'bin/HRday', 'bin/HRget',
               'bin/HRpresence', 'bin/HRcompany'],
+   cmdclass = {'build_py': build_py},
 
 )

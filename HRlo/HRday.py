@@ -8,8 +8,8 @@ from HRlo.logs import dayutils
 
 from HRlo.logs.daylog import DayLog
 
-from . import HRauth
-from . import HRget
+from HRlo import HRauth
+from HRlo import HRget
 
 class HRday(DayLog):
 
@@ -35,14 +35,16 @@ class HRday(DayLog):
                  'mission'      : 'MISSIONE',
                  'trip'         : 'TRASFERTA',
                  'bankhours'    : 'BANCA ORE GODUTA',
+                 'disease'      : 'MALATTIA CARICO AZIENDA',
+                 'marrowletting': 'DONAZIONE MIDOLLO',
                  'bloodletting' : 'DONAZIONE SANGUE'}
 
-    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'bloodletting']
-    sub_times_to_timenet = ['ko']
+    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'bloodletting', 'marrowletting']
+    sub_times_to_timenet = ['ko', 'bankhours']
 
-    sub_times_to_hr = ['rol', 'dayoff', 'bankhours', 'bloodletting']
+    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'bloodletting', 'marrowletting']
 
-    time_for_is_working = ['dayoff', 'bloodletting']
+    time_for_is_working = ['dayoff', 'disease', 'bloodletting', 'marrowletting']
 
     def __init__(self, field = None, data = None, label = None):
 
@@ -122,6 +124,11 @@ class HRday(DayLog):
        # date
        s += "{:.<25}".format( "Date" )
        s += "{}\n".format( str(self.date().date()) )
+
+       # not working day
+       if not self.is_working():
+           s += "{:.<25}".format( "Working day" )
+           s += "{}\n".format( self.is_working() )
 
        # uptime
        s += "{:.<25}".format( "Uptime" )
@@ -383,6 +390,8 @@ class HRday(DayLog):
         lunch_start = datetime.datetime.combine( self.date(), self.HR_lunch_start )
         lunch_end   = datetime.datetime.combine( self.date(), self.HR_lunch_end )
         working_time_during_lunch_time = self.uptime( lunch_start, lunch_end )
+        if not working_time_during_lunch_time:
+            return datetime.timedelta(0)
         # last time
         time_final = lunch_end
         if self._now < lunch_end:
@@ -396,7 +405,11 @@ class HRday(DayLog):
         return time_lunch
 
     def _get_lunch_time_remain(self):
-        return self.HR_lunch_time - self._get_lunch_time()
+        _lunch_time = self._get_lunch_time()
+        if _lunch_time > self.HR_lunch_time:
+            return datetime.timedelta(0)
+        else:
+            return self.HR_lunch_time -_lunch_time
 
 
     def anomaly(self):

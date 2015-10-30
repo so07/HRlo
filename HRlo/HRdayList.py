@@ -3,7 +3,7 @@ import datetime
 
 from HRlo.logs import dayutils
 
-from . import HRday
+from HRlo import HRday
 
 class HRdayList(list):
 

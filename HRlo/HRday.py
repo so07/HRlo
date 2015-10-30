@@ -8,8 +8,8 @@ from .logs import dayutils
 
 from .logs.daylog import DayLog
 
-from HRlo import HRauth
-from HRlo import HRget
+from . import HRauth
+from . import HRget
 
 class HRday(DayLog):
 

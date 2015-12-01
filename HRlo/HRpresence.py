@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import csv
 import argparse
 import itertools
@@ -55,7 +56,8 @@ class presence (HashedDict):
         return s
 
     def is_like (self, key, value):
-        if value.upper() in self[key]:
+        m = re.search(value.upper(), self[key].upper())
+        if m:
             return True
         else:
             return False

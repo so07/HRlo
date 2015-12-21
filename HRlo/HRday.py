@@ -36,15 +36,16 @@ class HRday(DayLog):
                  'trip'         : 'TRASFERTA',
                  'bankhours'    : 'BANCA ORE GODUTA',
                  'disease'      : 'MALATTIA CARICO AZIENDA',
+                 'bereavement'  : 'PERMESSO LUTTO E GRAVI MOTIVI',
                  'marrowletting': 'DONAZIONE MIDOLLO',
                  'bloodletting' : 'DONAZIONE SANGUE'}
 
-    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'bloodletting', 'marrowletting']
+    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
     sub_times_to_timenet = ['ko', 'bankhours']
 
-    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'bloodletting', 'marrowletting']
+    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
 
-    time_for_is_working = ['dayoff', 'disease', 'bloodletting', 'marrowletting']
+    time_for_is_working = ['dayoff', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
 
     def __init__(self, field = None, data = None, label = None):
 

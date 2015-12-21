@@ -29,23 +29,24 @@ class HRday(DayLog):
 
     sep_descr = '&&&'
 
-    time_hash = {'ko'           : 'ORE KO', # NB: KO is time for lunch to subtract from uptime.
-                 'rol'          : 'ROL',
-                 'dayoff'       : 'FERIE',
-                 'mission'      : 'MISSIONE',
-                 'trip'         : 'TRASFERTA',
-                 'bankhours'    : 'BANCA ORE GODUTA',
-                 'disease'      : 'MALATTIA CARICO AZIENDA',
-                 'bereavement'  : 'PERMESSO LUTTO E GRAVI MOTIVI',
-                 'marrowletting': 'DONAZIONE MIDOLLO',
-                 'bloodletting' : 'DONAZIONE SANGUE'}
+    time_hash = {'ko'              : 'ORE KO', # NB: KO is time for lunch to subtract from uptime.
+                 'rol'             : 'ROL',
+                 'dayoff'          : 'FERIE',
+                 'mission'         : 'MISSIONE',
+                 'trip'            : 'TRASFERTA',
+                 'bankhours'       : 'BANCA ORE GODUTA',
+                 'disease'         : 'MALATTIA',
+                 'disease_company' : 'MALATTIA CARICO AZIENDA',
+                 'bereavement'     : 'PERMESSO LUTTO E GRAVI MOTIVI',
+                 'marrowletting'   : 'DONAZIONE MIDOLLO',
+                 'bloodletting'    : 'DONAZIONE SANGUE'}
 
-    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
+    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
     sub_times_to_timenet = ['ko', 'bankhours']
 
-    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
+    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
 
-    time_for_is_working = ['dayoff', 'disease', 'bloodletting', 'marrowletting', 'bereavement']
+    time_for_is_working = ['dayoff', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
 
     def __init__(self, field = None, data = None, label = None):
 
@@ -99,6 +100,8 @@ class HRday(DayLog):
 
         # ... end init data for DayLog
 
+        self['time_lunch'] = self._get_lunch_time()
+        self['time_ko'] = self.HR_lunch_time - self['time_lunch']
 
         # add timenet key to Daylog class
         self['timenet'] = self._get_timenet()
@@ -106,9 +109,6 @@ class HRday(DayLog):
         # update uptime with mission/business trip times
         for k in ['trip', 'mission', 'bloodletting']:
            self['uptime'] += self['HR times'][k]
-
-        self['time_lunch'] = self._get_lunch_time()
-        self['time_ko'] = self.HR_lunch_time - self['time_lunch']
 
 
 # __str__ {{{
@@ -157,7 +157,10 @@ class HRday(DayLog):
        # KO time
        if self['HR times']['ko']:
           s += "{:.<25}".format( "KO time" )
-          s += "{}\n".format( self['HR times']['ko'] )
+          s += "{}\n".format( dayutils.sec2str(self['HR times']['ko'].total_seconds()) )
+       if self['time_ko'] and not self['HR times']['ko']:
+          s += "{:.<25}".format( "KO time" )
+          s += "{}\n".format( dayutils.sec2str(self['time_ko'].total_seconds()) )
 
        # ROL time
        if self['HR times']['rol']:
@@ -286,6 +289,9 @@ class HRday(DayLog):
        # times to subtract
        for k in self.sub_times_to_timenet:
           time -= self._get_hr_time(self.time_hash[k])
+
+       if self.get('time_ko'):
+           time -= self['time_ko']
 
        # times to add
        for k in self.add_times_to_timenet:

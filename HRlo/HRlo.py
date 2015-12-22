@@ -206,14 +206,9 @@ def main():
                              help="to date YYYY-MM-DD (default %(default)s)")
 
    HRpresence.add_parser(parser)
+   HRget.add_parser_phone(parser)
 
    parser_other = parser.add_argument_group()
-
-   parser_other.add_argument('-p', '--phone',
-                             action = NameParser,
-                             nargs = '+',
-                             metavar = "SURNAME",
-                             help="get worker phone number")
 
    parser_other.add_argument('--version', action='version',
                              version='%(prog)s ' + HRconfig.version,
@@ -241,8 +236,8 @@ def main():
    if args.monthly:
       print(hr.get_report_month())
 
-   if args.phone:
-       djson = hr.get_phone(args.phone)
+   if args.phone_name or args.phone_number:
+       djson = hr.hrget.phone(names = args.phone_name, phones = args.phone_number)
        print()
        for d in djson['Data']:
            for k, v in zip(djson['Fields'], d):
@@ -257,7 +252,7 @@ def main():
 
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day \
-      and not args.phone and not args.presence:
+      and not args.phone_name and not args.phone_number and not args.presence:
       today = hr.get_report_day()
       if today:
           print("\nToday :")

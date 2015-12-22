@@ -147,8 +147,9 @@ class HRday(DayLog):
           s += "{}".format( dayutils.sec2str(self['HR times']['net']) )
        s += '\n'
 
-       s += "{:.<25}".format( "Lunch" )
-       s += "{}\n".format( self['lunch'] )
+       if not self.is_today():
+          s += "{:.<25}".format( "Lunch" )
+          s += "{}\n".format( self['lunch'] )
        # lunch time
        s += "{:.<25}".format( "Lunch time" )
        s += "{}".format( dayutils.sec2str(self['time_lunch'].total_seconds()) )

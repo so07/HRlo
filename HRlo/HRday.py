@@ -290,7 +290,7 @@ class HRday(DayLog):
        for k in self.sub_times_to_timenet:
           time -= self._get_hr_time(self.time_hash[k])
 
-       if self.get('time_ko'):
+       if self.get('time_ko') and self.is_today():
            time -= self['time_ko']
 
        # times to add

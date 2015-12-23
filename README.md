@@ -63,9 +63,14 @@ accaerralo --from YYYY-MM-DD --to YYYY-MM-DD
 ```
 
 #### Phone numbers
-
+Get phone number from worker name:
 ```
 accaerralo -p SURNAME
+```
+
+Get worker name from phone number:
+```
+accaerralo -n PHONE_NUMBER
 ```
 
 #### Worker presence

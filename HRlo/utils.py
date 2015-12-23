@@ -1,6 +1,28 @@
 #!/usr/bin/env python3
 import re
 import argparse
+import datetime
+
+from .logs import dayutils
+
+def hr2seconds(HRtime):
+    """Convert time from HR units to seconds.
+       Return seconds in float.
+    """
+    return float(HRtime) *60.0*60.0
+
+def hr2time(HRtime, format=False):
+    """Convert time from HR units to timedelta.
+       Return datetime.timedelta.
+    """
+    dt = datetime.timedelta(seconds=hr2seconds(HRtime))
+
+    if format:
+        return dayutils.sec2str(dt.total_seconds())
+    else:
+        return dt
+    #return datetime.timedelta(seconds=hr2seconds(HRtime))
+
 
 class HashedDict (dict):
 

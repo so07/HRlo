@@ -19,7 +19,7 @@ setup(
    packages=['HRlo', 'HRlo/logs'],
    scripts = ['bin/accaerralo', 'bin/HRlo',
               'bin/HRday', 'bin/HRget',
-              'bin/HRpresence', 'bin/HRcompany'],
+              'bin/HRpresence', 'bin/HRcompany', 'bin/HRutils'],
    cmdclass = {'build_py': build_py},
 
 )

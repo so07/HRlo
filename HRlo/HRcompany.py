@@ -32,6 +32,9 @@ def add_parser(parser):
                         action="count", default=0,
                         help="increase verbosity")
 
+   _parser.add_argument('--list-keys',
+                        action = 'store_true',
+                        help='list all keys')
 
 
 
@@ -46,6 +49,10 @@ def main():
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
+
+    if args.list_keys:
+       print( "\n".join(sorted(HRpresence.presence.from_key_to_HRkey.keys())) )
+       return
 
     auth = HRauth.HRauth(**vars(args))
 

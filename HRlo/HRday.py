@@ -101,7 +101,7 @@ class HRday(DayLog):
         # ... end init data for DayLog
 
         self['time_lunch'] = self._get_lunch_time()
-        self['time_ko'] = self.HR_lunch_time - self['time_lunch']
+        self['time_ko'] = self._get_ko_time()
 
         # add timenet key to Daylog class
         self['timenet'] = self._get_timenet()
@@ -147,8 +147,9 @@ class HRday(DayLog):
           s += "{}".format( dayutils.sec2str(self['HR times']['net']) )
        s += '\n'
 
-       s += "{:.<25}".format( "Lunch" )
-       s += "{}\n".format( self['lunch'] )
+       if not self.is_today():
+          s += "{:.<25}".format( "Lunch" )
+          s += "{}\n".format( self['lunch'] )
        # lunch time
        s += "{:.<25}".format( "Lunch time" )
        s += "{}".format( dayutils.sec2str(self['time_lunch'].total_seconds()) )
@@ -410,6 +411,15 @@ class HRday(DayLog):
         # get lunch time
         time_lunch = time_final - time_start - self.uptime( lunch_start, lunch_end )
         return time_lunch
+
+    def _get_ko_time(self):
+        """Return ko time.
+           Return time in datetime.timedelta.
+        """
+        _time_ko = self.HR_lunch_time - self['time_lunch']
+        if _time_ko < datetime.timedelta(0):
+           _time_ko = datetime.timedelta(0)
+        return _time_ko
 
     def _get_lunch_time_remain(self):
         _lunch_time = self._get_lunch_time()

@@ -168,7 +168,7 @@ class HRpresence (object):
 
 def add_parser(parser):
 
-   _parser = parser.add_argument_group()
+   _parser = parser.add_argument_group('presence options')
 
    _parser.add_argument('--in', '--is_present',
                         dest = 'presence',

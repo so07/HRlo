@@ -2,6 +2,7 @@
 import re
 import sys
 import datetime
+import argparse
 
 from .logs import dayutils
 from .utils import NameParser
@@ -143,25 +144,18 @@ class HRlo(object):
        return presence.report(surname)
 
 
-def debug():
-
-    hrlo = HRlo()
-
-    #print(hrlo)
-
-    hrlo.report()
-
-
 def main():
-
-   import argparse
-   import getpass
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
                                     description='',
                                     formatter_class=argparse.RawTextHelpFormatter)
 
-   parser_todo = parser.add_argument_group()
+   parser.add_argument('--version', action='version',
+                       version='%(prog)s ' + HRconfig.version,
+                       help='print version and exit')
+
+
+   parser_todo = parser.add_argument_group('report options')
 
    parser_todo.add_argument('-d', '--daily',
                             action='store_true',
@@ -180,7 +174,7 @@ def main():
                             help='keep today in reports')
 
 
-   parser_range = parser.add_argument_group()
+   parser_range = parser.add_argument_group('range days options')
 
    def _date(s):
       for fmt in ['%Y-%m-%d', '%Y%m%d', '%d-%m-%Y', '%d/%m/%Y']:
@@ -206,13 +200,8 @@ def main():
                              help="to date YYYY-MM-DD (default %(default)s)")
 
    HRpresence.add_parser(parser)
+
    HRget.add_parser_phone(parser)
-
-   parser_other = parser.add_argument_group()
-
-   parser_other.add_argument('--version', action='version',
-                             version='%(prog)s ' + HRconfig.version,
-                             help='print version and exit')
 
    dauth = HRauth.add_parser(parser)
 
@@ -261,4 +250,4 @@ def main():
 
 if __name__ == '__main__':
    main()
-   #debug()
+

@@ -12,6 +12,7 @@ from . import HRget
 from . import HRday
 from . import HRdayList
 from . import HRpresence
+from . import HRtotalizator
 
 from . import color
 from . import config as HRconfig
@@ -143,6 +144,13 @@ class HRlo(object):
        presence = HRpresence.HRpresence(csv_data)
        return presence.report(surname)
 
+   def get_totalizator(self, key=None):
+       hr_tot = HRtotalizator.HRtotalizator(self.hrget.totalizators())
+       if key:
+           return hr_tot.get_value(key)
+       else:
+           return hr_tot.report()
+
 
 def main():
 
@@ -203,6 +211,8 @@ def main():
 
    HRget.add_parser_phone(parser)
 
+   HRtotalizator.add_parser(parser)
+
    dauth = HRauth.add_parser(parser)
 
    args = parser.parse_args()
@@ -238,10 +248,13 @@ def main():
           p = hr.get_presence(name)
           print(p)
 
+   if args.totalizators or args.get_totalizator:
+       print(hr.get_totalizator(args.get_totalizator))
 
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day \
-      and not args.phone_name and not args.phone_number and not args.presence:
+      and not args.phone_name and not args.phone_number and not args.presence \
+      and not args.totalizators and not args.get_totalizator:
       today = hr.get_report_day()
       if today:
           print("\nToday :")

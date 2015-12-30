@@ -23,6 +23,19 @@ def hr2time(HRtime, format=False):
         return dt
     #return datetime.timedelta(seconds=hr2seconds(HRtime))
 
+def time_sum(l):
+    d = datetime.timedelta(0)
+    for i in l:
+        is_negative = '-' in i
+        if is_negative:
+            i = i[1:]
+        t = dayutils.str2time(i)
+        dt = datetime.timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+        if is_negative:
+            d -= dt
+        else:
+            d += dt
+    return d
 
 class HashedDict (dict):
 
@@ -63,5 +76,11 @@ class NameParser(argparse.Action):
 
      def __call__(self, parser, namespace, values, option_string=None):
          values = [ refine_string(i) for i in values ]
+         setattr(namespace, self.dest, values)
+
+class TimeParser(argparse.Action):
+
+     def __call__(self, parser, namespace, values, option_string=None):
+         values = [ i.strip() for i in values.split(',') ]
          setattr(namespace, self.dest, values)
 

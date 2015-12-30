@@ -29,24 +29,46 @@ class HRday(DayLog):
 
     sep_descr = '&&&'
 
-    time_hash = {'ko'              : 'ORE KO', # NB: KO is time for lunch to subtract from uptime.
-                 'rol'             : 'ROL',
-                 'dayoff'          : 'FERIE',
-                 'mission'         : 'MISSIONE',
-                 'trip'            : 'TRASFERTA',
-                 'bankhours'       : 'BANCA ORE GODUTA',
-                 'disease'         : 'MALATTIA',
-                 'disease_company' : 'MALATTIA CARICO AZIENDA',
-                 'bereavement'     : 'PERMESSO LUTTO E GRAVI MOTIVI',
-                 'marrowletting'   : 'DONAZIONE MIDOLLO',
-                 'bloodletting'    : 'DONAZIONE SANGUE'}
+    time_hash = {
+        'ko'                                 : 'ORE KO', # NB: KO is time for lunch to subtract from uptime.
+        'rol'                                : 'ROL',
+        'dayoff'                             : 'FERIE',
+        'mission'                            : 'MISSIONE',
+        'trip'                               : 'TRASFERTA',
+        'bankhours'                          : 'BANCA ORE GODUTA',
+        'marital leave'                      : 'CONGEDO MATRIMONIALE',
+        'father discharge'                   : 'CONGEDO OBBLIGATORIO PADRE',
+        'marrowletting'                      : 'DONAZIONE MIDOLLO',
+        'bloodletting'                       : 'DONAZIONE SANGUE',
+        'disease'                            : 'MALATTIA',
+        'disease_company'                    : 'MALATTIA CARICO AZIENDA',
+        'baby disease > 3 yrs'               : 'MALATTIA BAMBINO > 3',
+        'baby disease <= 3 yrs'              : 'MALATTIA BAMBINO <= 3 ANNI',
+        'optional maternity leave'           : 'MATERN./PATERN. FACOLT. (0 - 6 ANNI)',
+        'optional maternity leave not paied' : 'MAT./PAT. FACOLT. NON RETR (7 - 12 ANNI)',
+        'relative bereavement'               : 'PERMESSO LUTTO AFFINI',
+        'bereavement'                        : 'PERMESSO LUTTO E GRAVI MOTIVI',
+    }
 
-    add_times_to_timenet = ['rol', 'trip', 'mission', 'dayoff', 'bankhours', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
     sub_times_to_timenet = ['ko', 'bankhours']
+    add_times_to_timenet = ['rol', 'dayoff', 'mission', 'trip', 'bankhours',
+                            'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
+                            'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
+                            'optional maternity leave', 'optional maternity leave not paied',
+                            'relative bereavement', 'bereavement']
 
-    sub_times_to_hr = ['rol', 'dayoff', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
+    sub_times_to_hr = ['rol', 'dayoff',
+                       'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
+                       'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
+                       'optional maternity leave', 'optional maternity leave not paied',
+                       'relative bereavement', 'bereavement']
 
-    time_for_is_working = ['dayoff', 'disease', 'disease_company', 'bloodletting', 'marrowletting', 'bereavement']
+    time_for_is_working = ['dayoff',
+                           'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
+                           'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
+                           'bloodletting', 'marrowletting',
+                           'optional maternity leave', 'optional maternity leave not paied',
+                           'relative bereavement', 'bereavement']
 
     def __init__(self, field = None, data = None, label = None):
 

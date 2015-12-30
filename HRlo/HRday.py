@@ -159,7 +159,7 @@ class HRday(DayLog):
        if self['HR times']['ko']:
           s += "{:.<25}".format( "KO time" )
           s += "{}\n".format( dayutils.sec2str(self['HR times']['ko'].total_seconds()) )
-       if self['time_ko'] and not self['HR times']['ko']:
+       if self['time_ko'] and not self['HR times']['ko'] and self.is_working():
           s += "{:.<25}".format( "KO time" )
           s += "{}\n".format( dayutils.sec2str(self['time_ko'].total_seconds()) )
 
@@ -280,9 +280,7 @@ class HRday(DayLog):
 
     def _get_timenet(self):
 
-       # CHANGEIT
-       d = self.date().weekday()
-       if d == 5 or d == 6:
+       if self.is_holiday():
           return 0
 
        time = self.uptime()

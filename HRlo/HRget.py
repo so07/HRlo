@@ -192,8 +192,9 @@ class HRget(object):
         return json
 
 
-    def tot(self, year  = datetime.date.today().year,
-                  month = datetime.date.today().month):
+    def totalizators(self,
+                     year  = datetime.date.today().year,
+                     month = datetime.date.today().month):
 
         date = datetime.date(year, month, 1) + datetime.timedelta(days=calendar.monthrange(year, month)[1])
 
@@ -206,7 +207,7 @@ class HRget(object):
                    'Cache-Control': 'no-cache'
                   }
         # }}}
-        # PARAMS  {{{
+        # PARAMS {{{
         params = {
                   'rows' : 100,
                   'startrow' : '0',
@@ -426,9 +427,9 @@ def main ():
                         action='store_true',
                         help="get day")
 
-    parser.add_argument('-t', '--tot',
+    parser.add_argument('--totalizators',
                         action='store_true',
-                        help="get tot")
+                        help="get totalizators")
 
     parser.add_argument('--presence',
                         action='store_true',
@@ -463,9 +464,9 @@ def main ():
             #    djson = json.load(f)
 
 
-    if args.tot:
+    if args.totalizators:
 
-        djson = hr_get.tot(year=args.year, month=args.month)
+        djson = hr_get.totalizators(year=args.year, month=args.month)
 
         if args.verbose:
             for d in djson['Data']:

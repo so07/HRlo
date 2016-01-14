@@ -6,7 +6,7 @@ import argparse
 
 from . import utils
 from .logs.daylog import DayLog
-from .logs import dayutils
+from .logs.dayutils import dayutils
 
 def add_parser(parser):
 

@@ -4,8 +4,7 @@ import sys
 import datetime
 import argparse
 
-from .logs import dayutils
-
+from .logs.dayutils import dayutils
 from .logs.daylog import DayLog
 
 from . import HRauth

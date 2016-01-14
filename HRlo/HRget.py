@@ -9,7 +9,7 @@ import json
 
 from collections import OrderedDict
 
-from .logs  import dayutils
+from .logs.dayutils  import dayutils
 from .utils import NameParser
 
 from . import HRauth

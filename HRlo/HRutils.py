@@ -6,6 +6,7 @@ import argparse
 
 from . import utils
 from .logs.daylog import DayLog
+from .logs import dayutils
 
 def add_parser(parser):
 
@@ -24,6 +25,10 @@ def add_parser(parser):
                             metavar='HRTIME',
                             help='convert time from HR units to time.')
 
+   date_parser.add_argument('--time-sum',
+                            action=utils.TimeParser,
+                            metavar='HH:MM:SS',
+                            help='calculate time sum.')
 
 def main():
 
@@ -52,6 +57,10 @@ def main():
 
         print("{} = {}".format("Time [HH:MM:SS]", utils.hr2time(args.hr2time, True)) )
 
+
+    if args.time_sum:
+        time_sum = utils.time_sum(args.time_sum)
+        print(dayutils.sec2str(time_sum.total_seconds()))
 
 
 if __name__ == '__main__':

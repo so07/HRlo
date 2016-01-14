@@ -162,7 +162,7 @@ class HRauth(dict):
 
 def add_parser(parser):
 
-   authparser = parser.add_argument_group('HR authentication options')
+   authparser = parser.add_argument_group('authentication options')
 
    authparser.add_argument('-u', '--username',
                            help='Username')

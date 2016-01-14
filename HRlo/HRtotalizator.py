@@ -139,7 +139,7 @@ class HRtotalizator (OrderedDict):
 
 def add_parser(parser):
 
-   _parser = parser.add_argument_group('Totalizator options')
+   _parser = parser.add_argument_group('totalizator options')
 
    _parser.add_argument('--tot', '--totalizators',
                         action = 'store_true',
@@ -149,6 +149,7 @@ def add_parser(parser):
    _parser.add_argument('--get-totalizator',
                         #choices = TotalizatorName.all_descriptions(),
                         dest = 'get_totalizator',
+                        metavar = 'TOTALIZATOR',
                         help='get totalizator value')
 
 

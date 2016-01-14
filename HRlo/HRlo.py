@@ -2,6 +2,7 @@
 import re
 import sys
 import datetime
+import argparse
 
 from .logs import dayutils
 from .utils import NameParser
@@ -11,6 +12,7 @@ from . import HRget
 from . import HRday
 from . import HRdayList
 from . import HRpresence
+from . import HRtotalizator
 
 from . import color
 from . import config as HRconfig
@@ -142,26 +144,26 @@ class HRlo(object):
        presence = HRpresence.HRpresence(csv_data)
        return presence.report(surname)
 
-
-def debug():
-
-    hrlo = HRlo()
-
-    #print(hrlo)
-
-    hrlo.report()
+   def get_totalizator(self, key=None):
+       hr_tot = HRtotalizator.HRtotalizator(self.hrget.totalizators())
+       if key:
+           return hr_tot.get_value(key)
+       else:
+           return hr_tot.report()
 
 
 def main():
-
-   import argparse
-   import getpass
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
                                     description='',
                                     formatter_class=argparse.RawTextHelpFormatter)
 
-   parser_todo = parser.add_argument_group()
+   parser.add_argument('--version', action='version',
+                       version='%(prog)s ' + HRconfig.version,
+                       help='print version and exit')
+
+
+   parser_todo = parser.add_argument_group('report options')
 
    parser_todo.add_argument('-d', '--daily',
                             action='store_true',
@@ -180,7 +182,7 @@ def main():
                             help='keep today in reports')
 
 
-   parser_range = parser.add_argument_group()
+   parser_range = parser.add_argument_group('range days options')
 
    def _date(s):
       for fmt in ['%Y-%m-%d', '%Y%m%d', '%d-%m-%Y', '%d/%m/%Y']:
@@ -206,13 +208,10 @@ def main():
                              help="to date YYYY-MM-DD (default %(default)s)")
 
    HRpresence.add_parser(parser)
+
    HRget.add_parser_phone(parser)
 
-   parser_other = parser.add_argument_group()
-
-   parser_other.add_argument('--version', action='version',
-                             version='%(prog)s ' + HRconfig.version,
-                             help='print version and exit')
+   HRtotalizator.add_parser(parser)
 
    dauth = HRauth.add_parser(parser)
 
@@ -249,10 +248,13 @@ def main():
           p = hr.get_presence(name)
           print(p)
 
+   if args.totalizators or args.get_totalizator:
+       print(hr.get_totalizator(args.get_totalizator))
 
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day \
-      and not args.phone_name and not args.phone_number and not args.presence:
+      and not args.phone_name and not args.phone_number and not args.presence \
+      and not args.totalizators and not args.get_totalizator:
       today = hr.get_report_day()
       if today:
           print("\nToday :")
@@ -261,4 +263,4 @@ def main():
 
 if __name__ == '__main__':
    main()
-   #debug()
+

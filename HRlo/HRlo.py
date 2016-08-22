@@ -5,6 +5,7 @@ import datetime
 import argparse
 
 from .logs import dayutils
+from .logs.dayutils import day_range as DayRange
 from .utils import NameParser
 
 from . import HRauth
@@ -41,11 +42,11 @@ class HRlo(object):
            raise KeyError("no data for {}".format(key))
        if not isinstance(key, datetime.datetime) and \
           not isinstance(key, datetime.date) and \
-          not isinstance(key, dayutils.day_range) and \
+          not isinstance(key, DayRange) and \
           not isinstance(key, slice):
           print("@__getitem__ NOT datetime.datetime")
           return None
-       if isinstance(key, dayutils.day_range):
+       if isinstance(key, DayRange):
           l = [ d for d in self.data if d.day().date() in key ]
           return l
        elif isinstance(key, datetime.datetime):
@@ -72,7 +73,7 @@ class HRlo(object):
 
 
    def get_report_day(self, day = datetime.date.today()):
-       self.init_data( dayutils.day_range(day, day) )
+       self.init_data( DayRange(day, day) )
        return self
 
 
@@ -92,7 +93,7 @@ class HRlo(object):
 
    def get_report(self, start, end, label = ''):
 
-       day_range = dayutils.day_range(start, end)
+       day_range = DayRange(start, end)
 
        self.init_data(day_range)
 

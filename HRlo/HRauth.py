@@ -12,6 +12,13 @@ try:
 except:
    from ConfigParser import SafeConfigParser
 
+HRauth_default = {
+    'config_file' : os.path.join( os.path.expanduser("~"), '.HRlo'),
+    'password_encoding' : 'base64',
+    'remove_config_file' : False,
+    'save' : False,
+    'required' : ['host', 'username', 'idemploy'],
+}
 
 class HRauth(dict):
 
@@ -19,12 +26,12 @@ class HRauth(dict):
 
    def __init__(self, **kwargs):
 
-      dict.__init__(self, **kwargs)
+      dict.__init__(self, **HRauth_default)
+      # update with arguments
+      self.update(kwargs)
 
       if self['remove_config_file']:
           self._remove_config_file()
-
-      self['required'] = ['host', 'username', 'idemploy']
 
       # read from config_file
       self.update( self._read_config_file(kwargs['config_file']) )
@@ -61,6 +68,7 @@ class HRauth(dict):
 
       return _pass
 
+
    def _password_encode(self):
       """Encode password"""
 
@@ -81,17 +89,14 @@ class HRauth(dict):
 
       return _pass
 
+
    def _check_required(self):
       missing = []
       for k in self['required']:
          if not self.get(k, False):
             missing.append(k)
-
-      if not missing:
-         return
-      else:
-         print("[HRauth] *** ERROR *** missing required args :", ", ".join(missing))
-         sys.exit(1)
+      if missing:
+         raise Exception("[HRauth] *** ERROR *** missing required args: {}".format( ", ".join(missing) ))
 
 
    def _read_config_file(self, fname):
@@ -122,9 +127,9 @@ class HRauth(dict):
           _encoded = self._password_encode()
           parser.set(self.HRauth_config_option, 'password', _encoded)
 
-
        with open(fname, "w") as f:
           parser.write(f)
+
 
    def _remove_config_file(self):
        if os.path.isfile(self['config_file']):
@@ -146,18 +151,21 @@ class HRauth(dict):
           if 'jsp/home.jsp' in r.headers['location']:
              return True
        except:
-          print("\n[HRauth] *** ERROR *** on HR authentication!\n")
-          sys.exit(1)
+          raise Exception("[HRauth] *** ERROR *** on HR authentication!")
 
 
    def host(self):
       return self['host']
+
    def username(self):
       return self['username']
+
    def idemploy(self):
       return self['idemploy']
+
    def password(self):
       return self['password']
+
 
 
 def add_parser(parser):
@@ -175,7 +183,7 @@ def add_parser(parser):
                            help='HR url')
 
    authparser.add_argument('-c', '--config-file',
-                           default = os.path.join( os.path.expanduser("~"), '.HRlo'),
+                           default=HRauth_default['config_file'],
                            help='Configuration file (default %(default)s)')
 
    authparser.add_argument('-s', '--save',
@@ -187,7 +195,8 @@ def add_parser(parser):
                            help='Save HR authentication password in HRauth config file')
 
    authparser.add_argument('--password-encoding',
-                           choices=['clear', 'base64'], default='base64',
+                           choices=['clear', 'base64'],
+                           default=HRauth_default['password_encoding'],
                            help='Password encoding (default %(default)s)')
 
    authparser.add_argument('--remove-config-file',
@@ -195,29 +204,23 @@ def add_parser(parser):
                            help='Remove HR config file')
 
    args = parser.parse_args()
-   return vars(args)
 
 
 def main ():
 
-   import HRget
    import argparse
 
-   parser = argparse.ArgumentParser(prog='',
-                                    description='descriptions',
+   parser = argparse.ArgumentParser(prog='HRauth',
+                                    description='Module to authenticate on HR.',
                                     formatter_class=argparse.RawTextHelpFormatter)
    add_parser(parser)
 
    args = parser.parse_args()
 
-   #print(args)
-
    auth = HRauth(**vars(args))
 
-   hrget = HRget.HRget(auth)
-
-   if hrget:
-      print("Successfully login!")
+   if auth.login():
+       print("Successfully login with user: {}".format(auth.username()))
 
 
 if __name__ == '__main__':

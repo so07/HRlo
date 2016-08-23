@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-import re
 import os
-import sys
 import requests
-
 import getpass
 import base64
 
@@ -41,6 +38,8 @@ class HRauth(dict):
       self._check_required()
 
       self._get_password()
+
+      self._session = requests.Session()
 
       if self['save']:
           if self.login():
@@ -137,34 +136,37 @@ class HRauth(dict):
          os.remove(self['config_file'])
 
 
+   def host(self):
+       return self['host']
+
+   def username(self):
+       return self['username']
+
+   def idemploy(self):
+       return "{:0>7}".format(str(self['idemploy']))
+
+   def password(self):
+       return self['password']
+
+   def login_url(self):
+       return 'https://' + self.host() + '/HRPortal/servlet/cp_login'
+
    def login(self):
+       return self._check_login(self.post())
 
-       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self['password'], 'm_cAction' : 'login'}
-
-       _login_url  = 'https://' + self['host'] + '/HRPortal/servlet/cp_login'
-
-       _session = requests.Session()
-
-       r = _session.post(_login_url, params=auth, allow_redirects=False)
-
+   def _check_login(self, session):
        try:
-          if 'jsp/home.jsp' in r.headers['location']:
+          if 'jsp/home.jsp' in session.headers['location']:
              return True
        except:
           raise Exception("[HRauth] *** ERROR *** on HR authentication!")
 
+   def session(self):
+       return self._session
 
-   def host(self):
-      return self['host']
-
-   def username(self):
-      return self['username']
-
-   def idemploy(self):
-      return self['idemploy']
-
-   def password(self):
-      return self['password']
+   def post(self):
+       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self['password'], 'm_cAction' : 'login'}
+       return self.session().post(self.login_url(), params=auth, allow_redirects=False)
 
 
 

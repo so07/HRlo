@@ -205,6 +205,8 @@ def add_parser(parser):
 
    args = parser.parse_args()
 
+   return vars(args)
+
 
 def main ():
 

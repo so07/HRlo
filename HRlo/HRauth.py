@@ -8,9 +8,9 @@ import getpass
 import base64
 
 try:
-   from configparser import SafeConfigParser
+   from configparser import ConfigParser
 except:
-   from ConfigParser import SafeConfigParser
+   from ConfigParser import ConfigParser
 
 HRauth_default = {
     'config_file' : os.path.join( os.path.expanduser("~"), '.HRlo'),
@@ -105,14 +105,14 @@ class HRauth(dict):
       if not os.path.isfile(fname):
          return {}
 
-      parser = SafeConfigParser()
+      parser = ConfigParser()
       parser.read(fname)
 
       return {k: parser.get(self.HRauth_config_option, k) for k in parser.options(self.HRauth_config_option)}
 
 
    def _write_config_file(self, fname):
-       parser = SafeConfigParser()
+       parser = ConfigParser()
 
        parser.add_section(self.HRauth_config_option)
 

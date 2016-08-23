@@ -4,8 +4,7 @@ import sys
 import datetime
 import argparse
 
-from .logs import dayutils
-
+from .logs.dayutils import dayutils
 from .logs.daylog import DayLog
 
 from . import HRauth
@@ -53,13 +52,13 @@ class HRday(DayLog):
     sub_times_to_timenet = ['ko', 'bankhours']
     add_times_to_timenet = ['rol', 'dayoff', 'mission', 'trip', 'bankhours',
                             'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
-                            'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
+                            'disease', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                             'optional maternity leave', 'optional maternity leave not paied',
                             'relative bereavement', 'bereavement']
 
     sub_times_to_hr = ['rol', 'dayoff',
                        'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
-                       'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
+                       'disease', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                        'optional maternity leave', 'optional maternity leave not paied',
                        'relative bereavement', 'bereavement']
 

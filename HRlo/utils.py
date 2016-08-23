@@ -3,7 +3,7 @@ import re
 import argparse
 import datetime
 
-from .logs import dayutils
+from .logs.dayutils import dayutils
 
 def hr2seconds(HRtime):
     """Convert time from HR units to seconds.

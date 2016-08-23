@@ -2,12 +2,7 @@
 import re
 import datetime
 
-# CHANGEIT
-try:
-    from . import dayutils
-except:
-    import dayutils
-
+from .dayutils import dayutils
 
 def pairwise(l):
    iterator = iter(l)

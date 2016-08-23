@@ -1,8 +1,14 @@
 # HRlo (aka accaerralo)
 
+HR manager
+
 [![](https://raw.githubusercontent.com/wiki/so07/HRlo/zucchetti.png)](https://www.youtube.com/watch?v=8Cfo06DvA5M)
 
 ### INSTALL
+```
+sudo pip3 install HRlo
+```
+
 ```
 git clone https://github.com/so07/HRlo.git
 cd HRlo
@@ -64,8 +70,14 @@ accaerralo --from YYYY-MM-DD --to YYYY-MM-DD
 
 #### Phone numbers
 
+###### Get phone number from worker name
 ```
 accaerralo -p SURNAME
+```
+
+###### Get worker name from phone number
+```
+accaerralo -n PHONE_NUMBER
 ```
 
 #### Worker presence

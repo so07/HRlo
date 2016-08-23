@@ -4,8 +4,8 @@ import sys
 import datetime
 import argparse
 
-from .logs import dayutils
 from .logs.dayutils import day_range as DayRange
+from .logs.dayutils import week_bounds, month_bounds
 from .utils import NameParser
 
 from . import HRauth
@@ -79,14 +79,14 @@ class HRlo(object):
 
    def get_report_week(self, day = datetime.datetime.today()):
 
-       start, end = dayutils.week_bounds(day)
+       start, end = week_bounds(day)
 
        return self.get_report(start, end, label="Weekly report")
 
 
    def get_report_month(self, day = datetime.datetime.today()):
 
-       start, end = dayutils.month_bounds(day)
+       start, end = month_bounds(day)
 
        return self.get_report(start, end, label="Monthly report")
 

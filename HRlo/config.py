@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 name    = 'HRlo'
-version = '0.6dev'
+version = '0.7dev'
 
-description = ''
+description = 'HR manager'
 
-url = ''
+url = 'https://github.com/so07/HRlo'
 
-author=''
+author='so07'
 author_email=''

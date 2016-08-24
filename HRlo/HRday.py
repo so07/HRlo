@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import re
-import sys
 import datetime
 import argparse
 
@@ -565,54 +564,30 @@ class HRday(DayLog):
           return False
 
 
-def debug():
-
-    f = []
-    d = []
-    with open('file', 'r') as fp:
-       for line in fp:
-          lf, ld = line.strip().split('=')
-          print( lf, ld )
-          f.append(lf.strip(' '))
-          d.append(ld.strip(' '))
-    #print(data)
-    day = HRday(f, d)
-
-    print(day)
-    #sys.exit()
-
-
 
 def main():
 
     parser = argparse.ArgumentParser(prog='HRday',
-                                     description='',
+                                     description='HR day manager',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
-
+    # add HRget arguments parser
     HRget.add_parser(parser)
-
+    # add HRauth arguments parser
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
 
 
-    auth = HRauth.HRauth(**vars(args))
+    hr_auth = HRauth.HRauth(**vars(args))
+    hr_get = HRget.HRget(hr_auth, verbose=False)
+    json = hr_get.get(year=args.year, month=args.month, day=args.day)
 
-    h = HRget.HRget(auth, verbose=False)
+    day = HRday(json)
 
-    json = h.get(year=args.year, month=args.month, day=args.day)
-
-    f, d = json['Fields'], json['Data']
-
-    #for i, j in zip(f, d):
-    #    print(i, j)
-    #print(d)
-
-    day = HRday( f, d )
     print(day)
 
 
 if __name__ == '__main__':
-    #debug()
     main()
+

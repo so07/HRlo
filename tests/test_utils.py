@@ -67,5 +67,27 @@ class test_utils(unittest.TestCase):
         self.check_result(utils.hr2time, known_values)
 
 
+class test_utils_is_number(unittest.TestCase):
+
+    def test_utils_is_number_float(self):
+        self.assertTrue(utils.is_number(1.0))
+        self.assertTrue(utils.is_number(7.3))
+        self.assertTrue(utils.is_number(-78.02))
+
+    def test_utils_is_number_int(self):
+        self.assertTrue(utils.is_number(42))
+        self.assertTrue(utils.is_number(-9))
+
+    def test_utils_is_number_exp(self):
+        self.assertTrue(utils.is_number(1.0e6))
+        self.assertTrue(utils.is_number(-8.890e-16))
+
+    def test_utils_is_number_string(self):
+        self.assertTrue(utils.is_number('42'))
+
+    def test_utils_is_number_error(self):
+        self.assertFalse(utils.is_number('string'))
+
+
 if __name__ == '__main__':
     unittest.main()

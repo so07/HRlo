@@ -11,6 +11,7 @@ def hr2seconds(HRtime):
     """
     return float(HRtime) *60.0*60.0
 
+
 def hr2time(HRtime, format=False):
     """Convert time from HR units to timedelta.
        Return datetime.timedelta.
@@ -22,6 +23,7 @@ def hr2time(HRtime, format=False):
     else:
         return dt
     #return datetime.timedelta(seconds=hr2seconds(HRtime))
+
 
 def time_sum(l):
     d = datetime.timedelta(0)
@@ -36,6 +38,15 @@ def time_sum(l):
         else:
             d += dt
     return d
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 
 class HashedDict (dict):
 

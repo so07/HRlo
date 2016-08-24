@@ -10,6 +10,8 @@ from .logs.daylog import DayLog
 from . import HRauth
 from . import HRget
 
+from . import utils
+
 class HRday(DayLog):
 
     re_logs = re.compile('(\d+)-')
@@ -212,8 +214,9 @@ class HRday(DayLog):
           s += "{:.<25}".format( "TimeStamps" )
           s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self.logs()]) )
 
-       s += "{:.<25}".format( "Anomaly" )
-       s += "{}\n".format( str(self.anomaly()) )
+       if self.anomaly():
+          s += "{:.<25}".format( "Anomaly" )
+          s += "{}\n".format( str(self.anomaly()) )
 
        #if not self.is_working():
        #   return s
@@ -285,24 +288,6 @@ class HRday(DayLog):
            self['HR times'][k] = datetime.timedelta(0)
 
 
-    def _hrunit2seconds(self, hrtime):
-        """Convert from HR units to second.
-           Return seconds in float."""
-        return float(hrtime) *60.0*60.0
-
-    def _hrunit2timedelta(self, hrtime):
-        """Convert from HR units to datetime.timedelta.
-           Return datetime.timedelta."""
-        return datetime.timedelta(seconds=self._hrunit2seconds(hrtime))
-
-    def _is_number(self, s):
-        try:
-            float(s)
-            return True
-        except ValueError:
-            return False
-
-
     def _get_timenet(self):
        """Return timenet in seconds."""
 
@@ -337,7 +322,7 @@ class HRday(DayLog):
         if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
             raise Exception("[HRday] ***ERROR***\nWorker not employed in date {}".format(self.date().date()))
 
-        if not self._is_number(time_[0]) or not self._is_number(time_[1]):
+        if not utils.is_number(time_[0]) or not utils.is_number(time_[1]):
             raise Exception("[HRday] ***ERROR***\nHR Time not well defined on date {}".format(self.date().date()))
 
 
@@ -380,8 +365,8 @@ class HRday(DayLog):
        _oreord = self.HR['OREORD']
        _oreecc = self.HR['OREECC']
 
-       _oreord_sec = self._hrunit2seconds(_oreord)
-       _oreecc_sec = self._hrunit2seconds(_oreecc)
+       _oreord_sec = utils.hr2seconds(_oreord)
+       _oreecc_sec = utils.hr2seconds(_oreecc)
        _oretot_sec = _oreord_sec + _oreecc_sec
 
        _uptime  = datetime.timedelta( seconds=_oretot_sec )
@@ -405,7 +390,7 @@ class HRday(DayLog):
         """
         value = self._get_hr_data_from_description(key)
         if value:
-            return self._hrunit2timedelta(value)
+            return utils.hr2time(value)
         else:
             return datetime.timedelta(0)
 

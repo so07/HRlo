@@ -21,8 +21,8 @@ from . import config as HRconfig
 class HRlo(object):
 
    def __init__(self, dauth, config = {}, day_range=None):
-       self.auth = HRauth.HRauth(**dauth)
-       self.hrget = HRget.HRget(self.auth)
+       self.hr_auth = HRauth.HRauth(**dauth)
+       self.hr_get = HRget.HRget(self.hr_auth)
 
        self.data = None
 
@@ -64,9 +64,9 @@ class HRlo(object):
 
    def init_data(self, day_range=None):
        if day_range:
-          json = self.hrget.get_range(day_range)
+          json = self.hr_get.get_range(day_range)
        else:
-          json = self.hrget.get()
+          json = self.hr_get.get()
 
        fields, HRdata = json['Fields'], json['Data']
        self.data = [ HRday.HRday(fields, day) for day in HRdata]
@@ -138,15 +138,15 @@ class HRlo(object):
        print(m)
 
    def get_phone(self, surname):
-       return self.hrget.phone(surname)
+       return self.hr_get.phone(surname)
 
    def get_presence(self, surname):
-       csv_data = self.hrget.presence()
+       csv_data = self.hr_get.presence()
        presence = HRpresence.HRpresence(csv_data)
        return presence.report(surname)
 
    def get_totalizator(self, key=None):
-       hr_tot = HRtotalizator.HRtotalizator(self.hrget.totalizators())
+       hr_tot = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
        if key:
            return hr_tot.get_value(key)
        else:
@@ -237,7 +237,7 @@ def main():
       print(hr.get_report_month())
 
    if args.phone_name or args.phone_number:
-       djson = hr.hrget.phone(names = args.phone_name, phones = args.phone_number)
+       djson = hr.hr_get.phone(names = args.phone_name, phones = args.phone_number)
        print()
        for d in djson['Data']:
            for k, v in zip(djson['Fields'], d):

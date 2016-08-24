@@ -4,7 +4,8 @@ import sys
 import datetime
 import argparse
 
-from .logs.dayutils import dayutils
+from .logs import dayutils
+
 from .logs.daylog import DayLog
 
 from . import HRauth
@@ -69,7 +70,7 @@ class HRday(DayLog):
                            'optional maternity leave', 'optional maternity leave not paied',
                            'relative bereavement', 'bereavement']
 
-    def __init__(self, field = None, data = None, label = None):
+    def __init__(self, json=None, label=None):
 
         self._now = datetime.datetime.today()
         self['label'] = label
@@ -78,10 +79,10 @@ class HRday(DayLog):
 
         DayLog.__init__(self)
 
-        if not field and not data:
+        if not json:
            return
 
-        self.HR = {k: v for k, v in zip(field, data)}
+        self.HR = {k: v for k, v in zip(json['Fields'], json['Data'])}
 
         # get data from HR ...
 
@@ -269,6 +270,7 @@ class HRday(DayLog):
 
 
     def _init_times (self):
+        """Inititalize times."""
 
         self['timenet'] = 0
         self['anomaly'] = 0
@@ -284,12 +286,15 @@ class HRday(DayLog):
            self['HR times'][k] = datetime.timedelta(0)
 
 
-    def _unit_hr2seconds(self, hrtime):
-        # convert to second
+    def _hrunit2seconds(self, hrtime):
+        """Convert from HR units to second.
+           Return seconds in float."""
         return float(hrtime) *60.0*60.0
 
-    def _unit_hr2timedelta(self, hrtime):
-        return datetime.timedelta(seconds=self._unit_hr2seconds(hrtime))
+    def _hrunit2timedelta(self, hrtime):
+        """Convert from HR units to datetime.timedelta.
+           Return datetime.timedelta."""
+        return datetime.timedelta(seconds=self._hrunit2seconds(hrtime))
 
     def _is_number(self, s):
         try:
@@ -300,6 +305,7 @@ class HRday(DayLog):
 
 
     def _get_timenet(self):
+       """Return timenet in seconds."""
 
        if self.is_holiday():
           return 0
@@ -330,15 +336,10 @@ class HRday(DayLog):
         """Check HR work time in DESCRORARIO key."""
 
         if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
-            print("[HRday] ***ERROR***")
-            print("Worker not employed in date", self.date().date())
-            sys.exit(-1)
+            raise Exception("[HRday] ***ERROR***\nWorker not employed in date {}".format(self.date().date()))
 
         if not self._is_number(time_[0]) or not self._is_number(time_[1]):
-            print("[HRday] ***ERROR***")
-            print("HR Time not well defined on date", self.date().date())
-            #print(type_, time_)
-            sys.exit(-1)
+            raise Exception("[HRday] ***ERROR***\nHR Time not well defined on date {}".format(self.date().date()))
 
 
     def _get_hr_work_time(self):
@@ -357,12 +358,11 @@ class HRday(DayLog):
           _time_delta = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) )
           # convert to seconds
           _time_sec  = _time_delta.total_seconds()
-       #print(self.HR['DESCRORARIO'], _time_sec)
        return _time_sec
 
 
     def _get_hr_real_work_time(self):
-       """Return real working time for HR in seconds involving rol, dayoff time.
+       """Return real working time for HR in seconds involving all hashed times (see time_hash list).
           If day is holiday return 0.
        """
        _hr_work_time_sec = self._get_hr_work_time()
@@ -380,10 +380,9 @@ class HRday(DayLog):
     def _get_hr_times(self):
        _oreord = self.HR['OREORD']
        _oreecc = self.HR['OREECC']
-       #print (_oreord, _oreecc)
 
-       _oreord_sec = self._unit_hr2seconds(_oreord)
-       _oreecc_sec = self._unit_hr2seconds(_oreecc)
+       _oreord_sec = self._hrunit2seconds(_oreord)
+       _oreecc_sec = self._hrunit2seconds(_oreecc)
        _oretot_sec = _oreord_sec + _oreecc_sec
 
        _uptime  = datetime.timedelta( seconds=_oretot_sec )
@@ -399,6 +398,7 @@ class HRday(DayLog):
             #if key in k:
                return v
 
+
     def _get_hr_time(self, key):
         """Return KEY time in datetime.timedelta.
            Get data from KEY flag in DESCRIZIONE1 field.
@@ -406,9 +406,10 @@ class HRday(DayLog):
         """
         value = self._get_hr_data_from_description(key)
         if value:
-            return self._unit_hr2timedelta(value)
+            return self._hrunit2timedelta(value)
         else:
             return datetime.timedelta(0)
+
 
     def _get_lunch_time(self):
         """Return lunch time between lunch start and end times.
@@ -431,6 +432,7 @@ class HRday(DayLog):
         time_lunch = time_final - time_start - self.uptime( lunch_start, lunch_end )
         return time_lunch
 
+
     def _get_ko_time(self):
         """Return ko time.
            Return time in datetime.timedelta.
@@ -440,7 +442,11 @@ class HRday(DayLog):
            _time_ko = datetime.timedelta(0)
         return _time_ko
 
+
     def _get_lunch_time_remain(self):
+        """Return remaining time to reach HR launch time.
+           Return time in datetime.timedelta.
+        """
         _lunch_time = self._get_lunch_time()
         if _lunch_time > self.HR_lunch_time:
             return datetime.timedelta(0)
@@ -449,11 +455,13 @@ class HRday(DayLog):
 
 
     def anomaly(self):
+        """Return number of anomalies found."""
         return self['anomaly']
 
 
     def timenet(self):
-       return self['timenet']
+        """Return timenet in seconds."""
+        return self['timenet']
 
 
     def remains(self, lunch=True, least=False):

@@ -5,6 +5,8 @@ from .logs.dayutils import dayutils
 
 from . import HRday
 
+from . import utils
+
 class HRdayList(list):
 
     def __init__(self, label=None):
@@ -32,35 +34,38 @@ class HRdayList(list):
        #s += "{:.<25}".format("Working days list")
        #s += "{}\n".format( self.working_days_list() )
        s += "{:.<25}".format( "Uptime" )
-       s += "{:<10}".format( dayutils.sec2str(self.hrday.uptime().total_seconds()) )
+       s += "{:<10}".format( utils.to_str(self.hrday.uptime()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['up'].total_seconds()) )
+       s += "{}\n".format( utils.to_str(self.hrday['HR times']['up']) )
        s += "{:.<25}".format( "Timenet" )
-       s += "{:<10}".format( dayutils.sec2str(self.hrday.timenet()) )
+       s += "{:<10}".format( utils.to_str(self.hrday.timenet()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( dayutils.sec2str(self.hrday['HR times']['net']) )
+       s += "{}\n".format( utils.to_str(self.hrday['HR times']['net']) )
        s += "{:.<25}".format( "Time to work" )
-       s += "{}\n".format( dayutils.sec2str(self.hrday.get('time_2work', 0)) )
+       s += "{}\n".format( utils.to_str(self.hrday.get('time_2work', 0)) )
+       if self.hrday.get('time_2work'):
+           s += "{:.<25}".format( "Worked time in %" )
+           s += "{:.1f}%\n".format( 100.0*self.hrday.uptime().total_seconds()/self.hrday.get('time_2work', 1) )
        s += "{:.<25}".format( "Uptime mean" )
-       s += "{}\n".format( dayutils.sec2str(self.mean(self.hrday.uptime().total_seconds())) )
+       s += "{}\n".format( utils.to_str(self.mean(self.hrday.uptime())) )
        s += "{:.<25}".format( "Timenet mean" )
-       s += "{}\n".format( dayutils.sec2str(self.mean(self.hrday.timenet())) )
+       s += "{}\n".format( utils.to_str(self.mean(self.hrday.timenet())) )
        #s += "{:.<25}".format("Logs")
        #for j in self:
        #   s += "[{}] ".format(", ".join([ i.time().strftime(dayutils.fmt_time) for i in j.logs() ]))
        #s += '\n'
 
        s += "{:.<25}".format("Timenets")
-       s += "[{}]\n".format( ", ".join([ dayutils.sec2str(d.timenet()) for d in self if d.is_working()]) )
+       s += "[{}]\n".format( ", ".join([ utils.to_str(d.timenet()) for d in self if d.is_working()]) )
 
        if self.anomaly():
            s += "{:.<25}".format( "Anomaly" )
            s += "{}\n".format( self.anomaly() )
 
        s += "{:.<25}".format( "Lunch time" )
-       s += "{}\n".format( dayutils.sec2str(self.hrday.get('time_lunch', datetime.timedelta(0)).total_seconds()) )
+       s += "{}\n".format( utils.to_str(self.hrday.get('time_lunch', datetime.timedelta(0))) )
        s += "{:.<25}".format( "Lunch time mean" )
-       s += "{}\n".format( dayutils.sec2str(self.mean(self.hrday.get('time_lunch', datetime.timedelta(0)).total_seconds())) )
+       s += "{}\n".format( utils.to_str(self.mean(self.hrday.get('time_lunch', datetime.timedelta(0)))) )
 
        return s
 

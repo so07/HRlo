@@ -159,23 +159,28 @@ class HRday(DayLog):
 
        # uptime
        s += "{:.<25}".format( "Uptime" )
-       s += "{:<10}".format( dayutils.sec2str(self.uptime().total_seconds()) )
+       s += "{:<10}".format( utils.to_str(self.uptime()) )
        if not self.is_today():
           s += " {} ".format( "for HR" )
-          s += "{}".format( dayutils.sec2str(self['HR times']['up'].total_seconds()) )
+          s += "{}".format( utils.to_str(self['HR times']['up']) )
        s += '\n'
 
        # timenet
        s += "{:.<25}".format( "Timenet" )
-       s += "{:<10}".format( dayutils.sec2str(self.timenet()) )
+       s += "{:<10}".format( utils.to_str(self.timenet()) )
        if not self.is_today():
           s += " {} ".format( "for HR" )
-          s += "{}".format( dayutils.sec2str(self['HR times']['net']) )
+          s += "{}".format( utils.to_str(self['HR times']['net']) )
        s += '\n'
 
        # time to work
        s += "{:.<25}".format( "Time to work" )
-       s += "{:<10}".format( dayutils.sec2str(self.time_to_work()) )
+       s += "{:<10}".format( utils.to_str(self.time_to_work()) )
+       s += '\n'
+
+       # percentage of worked time
+       s += "{:.<25}".format( "Worked time in %" )
+       s += "{:.1f}%".format( 100.0*self.uptime().total_seconds()/self.time_to_work() )
        s += '\n'
 
        if not self.is_today():
@@ -183,16 +188,16 @@ class HRday(DayLog):
           s += "{}\n".format( self['lunch'] )
        # lunch time
        s += "{:.<25}".format( "Lunch time" )
-       s += "{}".format( dayutils.sec2str(self['time_lunch'].total_seconds()) )
+       s += "{}".format( utils.to_str(self['time_lunch']) )
        s += '\n'
 
        # KO time
        if self['HR times']['ko']:
           s += "{:.<25}".format( "KO time" )
-          s += "{}\n".format( dayutils.sec2str(self['HR times']['ko'].total_seconds()) )
+          s += "{}\n".format( utils.to_str(self['HR times']['ko']) )
        if self['time_ko'] and not self['HR times']['ko'] and self.is_working():
           s += "{:.<25}".format( "KO time" )
-          s += "{}\n".format( dayutils.sec2str(self['time_ko'].total_seconds()) )
+          s += "{}\n".format( utils.to_str(self['time_ko']) )
 
        # ROL time
        if self['HR times']['rol']:
@@ -231,21 +236,21 @@ class HRday(DayLog):
        if self.is_today():
           s += "{:-<25}\n".format( "---- Estimated Exits " )
           # with lunch
-          s += "{:.<25}{}\n".format( "Standard time", dayutils.sec2str(self.HR_workday.total_seconds()) )
+          s += "{:.<25}{}\n".format( "Standard time", utils.to_str(self.HR_workday) )
           s += "{:.<25}".format( "Remains" )
-          s += "{}\n".format( dayutils.sec2str(self.remains(lunch=True, least=False).total_seconds()) )
+          s += "{}\n".format( utils.to_str(self.remains(lunch=True, least=False)) )
           s += "{:.<25}".format( "Estimated exit" )
           s += "{}\n".format( str(self.exit(lunch=True, least=False).strftime("%H:%M")) )
           # at least with lunch
-          s += "{:.<25}{}\n".format( "At least with lunch time", dayutils.sec2str(self.HR_workday_least_with_lunch.total_seconds()) )
+          s += "{:.<25}{}\n".format( "At least with lunch time", utils.to_str(self.HR_workday_least_with_lunch) )
           s += "{:.<25}".format( "Remains" )
-          s += "{}\n".format( dayutils.sec2str(self.remains(lunch=True, least=True).total_seconds()) )
+          s += "{}\n".format( utils.to_str(self.remains(lunch=True, least=True)) )
           s += "{:.<25}".format( "Estimated exit" )
           s += "{}\n".format( str(self.exit(lunch=True, least=True).strftime("%H:%M")) )
           # at least
-          s += "{:.<25}{}\n".format( "At least working time", dayutils.sec2str(self.HR_workday_least.total_seconds()) )
+          s += "{:.<25}{}\n".format( "At least working time", utils.to_str(self.HR_workday_least) )
           s += "{:.<25}".format( "Remains" )
-          s += "{}\n".format( dayutils.sec2str(self.remains(lunch=False, least=True).total_seconds()) )
+          s += "{}\n".format( utils.to_str(self.remains(lunch=False, least=True)) )
           s += "{:.<25}".format( "Estimated exit" )
           s += "{}\n".format( str(self.exit(lunch=False, least=True).strftime("%H:%M")) )
        return s

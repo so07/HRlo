@@ -3,8 +3,15 @@ import re
 import argparse
 import datetime
 
-from .logs.dayutils import dayutils
+from .logs.dayutils import dayutils, sec2str
 
+
+def to_str(x):
+    """Convert seconds or datetime.timedelta to string in format HH:MM:SS."""
+    if isinstance(x, datetime.timedelta):
+        return sec2str(x.total_seconds())
+    else:
+        return sec2str(x)
 
 def hr2seconds(HRtime):
     """Convert time from HR units to seconds.

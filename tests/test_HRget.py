@@ -75,6 +75,12 @@ class test_HRget_functionalities(unittest.TestCase):
     #def test_HRget_check_data(self):
     #    pass
 
+    #def test_HRget_read(self):
+    #    pass
+
+    #def test_HRget_dump(self):
+    #    pass
+
 
 if __name__ == '__main__':
     unittest.main()

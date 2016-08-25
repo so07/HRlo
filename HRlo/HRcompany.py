@@ -58,10 +58,7 @@ def main():
 
     h = HRget.HRget(auth, verbose=False)
 
-    # get presence in scv format
-    csv_data = h.presence()
-
-    p = HRpresence.HRpresence(csv_data)
+    p = HRpresence.HRpresence( h.presence() )
 
     if args.report:
 

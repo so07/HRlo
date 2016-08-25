@@ -318,8 +318,17 @@ class HRget(object):
 
         csv_data = p.text
 
-        return csv_data
+        return {'csv_data' : csv_data}
 
+
+    def read(self, f):
+        with open(f, 'r') as fp:
+            j = json.load(fp)
+        return j
+
+    def dump(self, f, j):
+        with open(f, 'w') as fp:
+           json.dump(j, fp)
 
 
 
@@ -386,17 +395,27 @@ def main ():
                         help="get presence of worker")
 
     parser.add_argument('--dump',
-                        dest = 'file_out',
+                        dest='file_out',
                         help="dump to file")
+
+    parser.add_argument('--read',
+                        dest='file_input',
+                        help="read from file")
 
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
 
+    djson = None
+
 
     auth = HRauth.HRauth(**vars(args))
 
     hr_get = HRget(auth, verbose=args.verbose)
+
+
+    if args.file_input:
+        djson = hr_get.read(args.file_input)
 
 
     if args.get:
@@ -406,12 +425,6 @@ def main ():
         if args.verbose:
             for k, v in zip(djson['Fields'], djson['Data']):
                 print(k, " = ", v)
-
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                json.dump(djson, f)
-            #with open(args.file_out, 'r') as f:
-            #    djson = json.load(f)
 
 
     if args.totalizators:
@@ -424,10 +437,6 @@ def main ():
                     print(k, " = ", v)
                 print()
 
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                json.dump(djson, f)
-
 
     if args.phone_name or args.phone_number:
 
@@ -439,21 +448,17 @@ def main ():
                 print(v)
             print()
 
-        if args.file_out:
-            with open(args.file_out, 'a') as f:
-                json.dump(djson, f)
-
 
     if args.presence:
 
-        csv = hr_get.presence()
+        djson = hr_get.presence()
 
         if args.verbose:
-            print(csv)
+            print(djson)
 
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                f.write(csv)
+
+    if args.file_out:
+        hr_get.dump(f, djson)
 
 
 

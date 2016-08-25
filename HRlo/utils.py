@@ -5,6 +5,7 @@ import datetime
 
 from .logs.dayutils import dayutils
 
+
 def hr2seconds(HRtime):
     """Convert time from HR units to seconds.
        Return seconds in float.

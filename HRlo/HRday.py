@@ -71,6 +71,8 @@ class HRday(DayLog):
                            'optional maternity leave', 'optional maternity leave not paied',
                            'relative bereavement', 'bereavement']
 
+    times_to_add = ['time_lunch', 'time_ko', 'time_2work', 'lunch', 'anomaly', 'mission']
+
     def __init__(self, json=None, label=None):
 
         self._now = datetime.datetime.today()
@@ -125,6 +127,7 @@ class HRday(DayLog):
 
         self['time_lunch'] = self._get_lunch_time()
         self['time_ko'] = self._get_ko_time()
+        self['time_2work'] = self._get_hr_work_time()
 
         # add timenet key to Daylog class
         self['timenet'] = self._get_timenet()
@@ -168,6 +171,11 @@ class HRday(DayLog):
        if not self.is_today():
           s += " {} ".format( "for HR" )
           s += "{}".format( dayutils.sec2str(self['HR times']['net']) )
+       s += '\n'
+
+       # time to work
+       s += "{:.<25}".format( "Time to work" )
+       s += "{:<10}".format( dayutils.sec2str(self.time_to_work()) )
        s += '\n'
 
        if not self.is_today():
@@ -267,6 +275,9 @@ class HRday(DayLog):
 
        for k in self['HR times'].keys():
           a['HR times'][k] = self['HR times'][k] + other['HR times'][k]
+
+       for k in self.times_to_add:
+           a[k] = self[k] + other[k]
 
        return a
 
@@ -446,6 +457,11 @@ class HRday(DayLog):
     def timenet(self):
         """Return timenet in seconds."""
         return self['timenet']
+
+
+    def time_to_work(self):
+        """Return working time in seconds."""
+        return self._get_hr_work_time()
 
 
     def remains(self, lunch=True, least=False):

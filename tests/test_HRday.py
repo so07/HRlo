@@ -70,6 +70,9 @@ class test_HRget_functionalities(unittest.TestCase):
     def test_HRday_timenet(self):
         x = self.day.timenet()
 
+    def test_HRday_time_to_work(self):
+        x = self.day.time_to_work()
+
     def test_HRday_remains(self):
         x = self.day.timenet()
 

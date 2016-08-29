@@ -96,9 +96,9 @@ class HRday(DayLog):
         # get uptime/nettime for HR
         self['HR times']['up'], self['HR times']['net'] = self._get_hr_times()
         # get lunch benefits
-        self['lunch'] = self.is_lunch()
+        self['lunch'] = self.lunch()
         # get mission benefits
-        self['mission'] = self.is_mission()
+        self['mission'] = self.mission()
         # get HR times
         for k in self.time_hash.keys():
            self['HR times'][k] = self._get_hr_time(self.time_hash[k])
@@ -153,9 +153,9 @@ class HRday(DayLog):
        s += "{}\n".format( str(self.date().date()) )
 
        # not working day
-       if not self.is_working():
+       if not self.working():
            s += "{:.<25}".format( "Working day" )
-           s += "{}\n".format( self.is_working() )
+           s += "{}\n".format( self.working() )
 
        # uptime
        s += "{:.<25}".format( "Uptime" )
@@ -195,7 +195,7 @@ class HRday(DayLog):
        if self['HR times']['ko']:
           s += "{:.<25}".format( "KO time" )
           s += "{}\n".format( utils.to_str(self['HR times']['ko']) )
-       if self['time_ko'] and not self['HR times']['ko'] and self.is_working():
+       if self['time_ko'] and not self['HR times']['ko'] and self.working():
           s += "{:.<25}".format( "KO time" )
           s += "{}\n".format( utils.to_str(self['time_ko']) )
 
@@ -219,7 +219,7 @@ class HRday(DayLog):
           s += "{:.<25}".format( "Mission time" )
           s += "{}\n".format( self['HR times']['mission'] )
 
-       if self.is_mission():
+       if self.mission():
           s += "{:.<25}".format( "Mission" )
           s += "{}\n".format( self['mission'] )
 
@@ -231,7 +231,7 @@ class HRday(DayLog):
           s += "{:.<25}".format( "Anomaly" )
           s += "{}\n".format( str(self.anomaly()) )
 
-       #if not self.is_working():
+       #if not self.working():
        #   return s
        if self.is_today():
           s += "{:-<25}\n".format( "---- Estimated Exits " )
@@ -307,7 +307,7 @@ class HRday(DayLog):
     def _get_timenet(self):
        """Return timenet in seconds."""
 
-       if self.is_holiday():
+       if self.holiday():
           return 0
 
        time = self.uptime()
@@ -348,7 +348,7 @@ class HRday(DayLog):
           If day is holiday return 0.
        """
        # read from DESCRORARIO to get working time for HR
-       if self.is_holiday():
+       if self.holiday():
           _time_sec = 0
        else:
           _time_info = self.HR['DESCRORARIO'].split()
@@ -495,7 +495,7 @@ class HRday(DayLog):
         return  (self._now + self.remains(lunch, least)).time()
 
 
-    def is_holiday(self):
+    def holiday(self):
        """Return True if day is an holiday otherwise return False.
           Check if DESCRORARIO key is equal to SABATO, DOMENICA, FESTIVO.
        """
@@ -508,16 +508,16 @@ class HRday(DayLog):
            return False
 
 
-    def is_working(self):
-       if not self.logs() and not self.is_mission() and self.is_holiday():
+    def working(self):
+       if not self.logs() and not self.mission() and self.holiday():
           return False
 
        # check for holiday
-       if self.is_holiday():
+       if self.holiday():
            return False
 
        # check for total rol day
-       if self.is_rol_total():
+       if self.rol_total():
           return False
 
        # check for times
@@ -528,7 +528,7 @@ class HRday(DayLog):
        return True
 
 
-    def is_lunch(self):
+    def lunch(self):
        value = self._get_hr_data_from_description('IND. MENSA')
        if value:
            return int(float(value))
@@ -536,7 +536,7 @@ class HRday(DayLog):
            return 0
 
 
-    def is_mission(self):
+    def mission(self):
        value = self._get_hr_data_from_description('IND. DI MISSIONE')
        if value:
            return int(float(value))
@@ -548,12 +548,12 @@ class HRday(DayLog):
         return self._get_hr_time(self.time_hash[key])
 
 
-    def is_rol_total(self):
+    def rol_total(self):
         """Check for entire day ROL.
            Return bool.
            If holiday return False.
         """
-        if self.is_holiday():
+        if self.holiday():
             return False
 
         _rol_time_seconds = self.get_time('rol').total_seconds()

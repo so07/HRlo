@@ -49,20 +49,20 @@ class test_HRget_functionalities(unittest.TestCase):
     def test_HRday_is_today(self):
         self.assertTrue(self.day.is_today())
 
-    def test_HRday_is_mission(self):
-        x = self.day.is_mission()
+    def test_HRday_mission(self):
+        x = self.day.mission()
 
-    def test_HRday_is_lunch(self):
-        x = self.day.is_lunch()
+    def test_HRday_lunch(self):
+        x = self.day.lunch()
 
-    def test_HRday_is_working(self):
-        x = self.day.is_working()
+    def test_HRday_working(self):
+        x = self.day.working()
 
-    def test_HRday_is_holiday(self):
-        x = self.day.is_holiday()
+    def test_HRday_holiday(self):
+        x = self.day.holiday()
 
-    def test_HRday_is_rol_total(self):
-        x = self.day.is_rol_total()
+    def test_HRday_rol_total(self):
+        x = self.day.rol_total()
 
     def test_HRday_anomaly(self):
         x = self.day.anomaly()
@@ -99,7 +99,6 @@ class test_HRget_functionalities(unittest.TestCase):
 
     def test_HRday__get_lunch_time_remain(self):
         x = self.day._get_lunch_time_remain()
-
 
 
 if __name__ == '__main__':

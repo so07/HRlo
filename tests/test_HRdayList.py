@@ -56,19 +56,16 @@ class test_HRdayList_functionalities(unittest.TestCase):
         self.daylist.append(self.day)
 
     def test_HRday_working_days_number(self):
-        self.daylist.working_days_number()
+        self.daylist.working()
 
     def test_HRday_working_days_list(self):
-        self.daylist.working_days_list()
-
-    def test_HRday_is_working_list(self):
-        self.daylist.is_working_list()
+        self.daylist.working(list=True)
 
     def test_HRday_uptime(self):
         self.daylist.uptime()
 
     def test_HRday_uptime_list(self):
-        self.daylist.uptime_list()
+        self.daylist.uptime(list=True)
 
     def test_HRday_uptime_mean(self):
         self.daylist.mean(self.daylist.uptime())
@@ -77,19 +74,19 @@ class test_HRdayList_functionalities(unittest.TestCase):
         self.daylist.anomaly()
 
     def test_HRday_anomaly_list(self):
-        self.daylist.anomaly_list()
+        self.daylist.anomaly(list=True)
 
     def test_HRday_anomaly_mean(self):
         self.daylist.mean(self.daylist.anomaly())
 
-    def test_HRday__getattr_from_HRday_uptime(self):
-        self.daylist._getattr_from_HRday('uptime')
+    def test_HRday__get_list_attr_uptime(self):
+        self.daylist._get_list_attr('uptime')
 
-    def test_HRday__getattr_from_HRday_anomaly(self):
-        self.daylist._getattr_from_HRday('anomaly')
+    def test_HRday__get_list_attr_anomaly(self):
+        self.daylist._get_list_attr('anomaly')
 
-    def test_HRday__getattr_from_HRday_is_working(self):
-        self.daylist._getattr_from_HRday('is_working')
+    def test_HRday__get_list_attr_working(self):
+        self.daylist._get_list_attr('working')
 
 
 

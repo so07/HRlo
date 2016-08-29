@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
-import datetime
+from datetime import timedelta
 
-from .logs.dayutils import dayutils
-
-from . import HRday
-
-from . import utils
+from .HRday import HRday
+from .utils import to_str
 
 class HRdayList(list):
 
+
     def __init__(self, label=None):
 
-       self.hrday = HRday.HRday()
+       self.hrday = HRday()
+
+       self.label = label
 
        #self_hr_time = {}
        #self._hr_time['net'] = 0
-       #for k in list(HRday.HRday.time_hash.keys()) + ['up']:
-       #    self._hr_time[k] = datetime.timedelta(0)
-
-       self.label = label
+       #for k in list(HRday.time_hash.keys()) + ['up']:
+       #    self._hr_time[k] = timedelta(0)
 
 
     def __str__(self):
@@ -28,102 +26,113 @@ class HRdayList(list):
           s += "."*25 + "{}\n".format(self.label)
 
        s += "{:.<25}".format("Working days")
-       s += "{}\n".format( ", ".join([ str(i.day().date()) for i in self if i.is_working()]))
+       s += "{}\n".format( ", ".join([ str(i.day().date()) for i in self if i.working()]))
        s += "{:.<25}".format("Num. Working days")
-       s += "{}\n".format( self.working_days_number() )
+       s += "{}\n".format( self.working() )
        #s += "{:.<25}".format("Working days list")
-       #s += "{}\n".format( self.working_days_list() )
+       #s += "{}\n".format( self.working(list=True) )
        s += "{:.<25}".format( "Uptime" )
-       s += "{:<10}".format( utils.to_str(self.hrday.uptime()) )
+       s += "{:<10}".format( to_str(self.hrday.uptime()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( utils.to_str(self.hrday['HR times']['up']) )
+       s += "{}\n".format( to_str(self.hrday['HR times']['up']) )
        s += "{:.<25}".format( "Timenet" )
-       s += "{:<10}".format( utils.to_str(self.hrday.timenet()) )
+       s += "{:<10}".format( to_str(self.hrday.timenet()) )
        s += " {} ".format( "for HR" )
-       s += "{}\n".format( utils.to_str(self.hrday['HR times']['net']) )
+       s += "{}\n".format( to_str(self.hrday['HR times']['net']) )
        s += "{:.<25}".format( "Time to work" )
-       s += "{}\n".format( utils.to_str(self.hrday.get('time_2work', 0)) )
+       s += "{}\n".format( to_str(self.hrday.get('time_2work', 0)) )
        if self.hrday.get('time_2work'):
            s += "{:.<25}".format( "Worked time in %" )
            s += "{:.1f}%\n".format( 100.0*self.hrday.uptime().total_seconds()/self.hrday.get('time_2work', 1) )
        s += "{:.<25}".format( "Uptime mean" )
-       s += "{}\n".format( utils.to_str(self.mean(self.hrday.uptime())) )
+       s += "{}\n".format( to_str(self.mean(self.hrday.uptime())) )
        s += "{:.<25}".format( "Timenet mean" )
-       s += "{}\n".format( utils.to_str(self.mean(self.hrday.timenet())) )
-       #s += "{:.<25}".format("Logs")
-       #for j in self:
-       #   s += "[{}] ".format(", ".join([ i.time().strftime(dayutils.fmt_time) for i in j.logs() ]))
-       #s += '\n'
+       s += "{}\n".format( to_str(self.mean(self.hrday.timenet())) )
 
        s += "{:.<25}".format("Timenets")
-       s += "[{}]\n".format( ", ".join([ utils.to_str(d.timenet()) for d in self if d.is_working()]) )
+       s += "[{}]\n".format( ", ".join([ to_str(d.timenet()) for d in self if d.working()]) )
 
        if self.anomaly():
            s += "{:.<25}".format( "Anomaly" )
            s += "{}\n".format( self.anomaly() )
 
        s += "{:.<25}".format( "Lunch time" )
-       s += "{}\n".format( utils.to_str(self.hrday.get('time_lunch', datetime.timedelta(0))) )
+       s += "{}\n".format( to_str(self.hrday.get('time_lunch', timedelta(0))) )
        s += "{:.<25}".format( "Lunch time mean" )
-       s += "{}\n".format( utils.to_str(self.mean(self.hrday.get('time_lunch', datetime.timedelta(0)))) )
+       s += "{}\n".format( to_str(self.mean(self.hrday.get('time_lunch', timedelta(0)))) )
 
        return s
 
+
     def append(self, args):
-       #if not args.is_working(): return
+       #if not args.working(): return
        list.append(self, args)
 
        self.hrday['uptime'] += args.uptime()
 
-       for k in list(HRday.HRday.time_hash.keys()) + ['up', 'net']:
+       for k in list(HRday.time_hash.keys()) + ['up', 'net']:
           self.hrday['HR times'][k] += args['HR times'][k]
 
-       if not args.anomaly() and not args.is_holiday():
+       if not args.anomaly() and not args.holiday():
           self.hrday['timenet'] += args.timenet()
 
-       for k in HRday.HRday.times_to_add:
+       for k in HRday.times_to_add:
            try:
                self.hrday[k] += args[k]
            except KeyError:
                self.hrday[k] = args[k]
 
 
-    def _getattr_from_HRday(self, attr):
-       return [getattr(i, attr)() for i in self]
+    def _get_list_attr(self, attr, days=False):
+        """Return list of values of attributes attr from HRday list."""
+        if days:
+            return [i for i in self if getattr(i, attr)()]
+        else:
+            return [getattr(i, attr)() for i in self]
 
-    def uptime_list(self):
-       return self._getattr_from_HRday('uptime') 
 
-    def uptime(self):
-       up = datetime.timedelta(0)
-       for i in self.uptime_list():
-          up += i
-       return up 
+    def uptime(self, list=False):
+        """Return total uptime.
+           If list=True return the list of all uptimes."""
+        if list:
+            return self._get_list_attr('uptime')
+        else:
+            up = timedelta(0)
+            for i in self.uptime(list=True):
+                up += i
+            return up
 
-    def anomaly_list(self):
-       return self._getattr_from_HRday('anomaly') 
 
-    def anomaly(self):
-       return sum(self.anomaly_list())
+    def anomaly(self, list=False):
+        """Return number of anomalies.
+           If list=True return the list of HRday with anomalies."""
+        if list:
+            return self._get_list_attr('anomaly', days=True)
+        else:
+            return len(self.anomaly(list=True))
 
-    #def timenet_list(self):
-    #   return self._getattr_from_HRday('timenet')
-    #def timenet(self):
-    #   return sum(self.timenet_list())
 
-    def is_working_list(self):
-       return self._getattr_from_HRday('is_working')
+    def working(self, list=False):
+        """Return number of working days.
+           If list=True return the list of working HRday."""
+        if list:
+            return self._get_list_attr('working', days=True)
+        else:
+            return len(self.working(list=True))
 
-    def working_days_number(self):
-       return sum(self.is_working_list())
-    def working_days_list(self):
-       return [ i.date() for i in self if i.is_working() ]
+
+    #def timenet(self, list=False):
+    #    if list:
+    #        return self._get_list_attr('timenet')
+    #    else:
+    #        return sum(self.timenet(list=True))
+
 
     def mean(self, t):
-        if self.working_days_number() == 0:
-            if isinstance(t, datetime.timedelta):
-                return datetime.timedelta(0)
+        if self.working() == 0:
+            if isinstance(t, timedelta):
+                return timedelta(0)
             else:
                 return 0
-        return t / self.working_days_number()
+        return t / self.working(list=False)
 

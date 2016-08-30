@@ -24,7 +24,7 @@ setup(
    scripts=['bin/accaerralo', 'bin/HRlo',
             'bin/HRday', 'bin/HRget',
             'bin/HRpresence', 'bin/HRcompany',
-            'bin/HRtotalizator',
+            'bin/HRtotalizator', 'bin/HRphone',
             'bin/HRutils'],
    cmdclass={'build_py': build_py},
 

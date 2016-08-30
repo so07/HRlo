@@ -156,6 +156,7 @@ def add_parser(parser):
 def main():
 
     parser = argparse.ArgumentParser(prog='HRtotalizator',
+                                     description='HR manager utility for totalizators.',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)

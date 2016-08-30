@@ -192,7 +192,7 @@ def add_parser(parser):
 def main():
 
     parser = argparse.ArgumentParser(prog='HRpresence',
-                                     description='',
+                                     description='HR manager utility for workers presence.',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)

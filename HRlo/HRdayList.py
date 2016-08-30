@@ -91,6 +91,10 @@ class HRdayList(list):
             return [getattr(i, attr)() for i in self]
 
 
+    def report(self):
+        return str(self)
+
+
     def uptime(self, list=False):
         """Return total uptime.
            If list=True return the list of all uptimes."""

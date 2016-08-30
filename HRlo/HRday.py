@@ -454,6 +454,10 @@ class HRday(DayLog):
             return self.HR_lunch_time -_lunch_time
 
 
+    def report(self):
+        return str(self)
+
+
     def anomaly(self):
         """Return number of anomalies found."""
         return self['anomaly']
@@ -568,6 +572,7 @@ class HRday(DayLog):
           return True
        else:
           return False
+
 
 
 

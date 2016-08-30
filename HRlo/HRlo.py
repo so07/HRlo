@@ -9,6 +9,7 @@ from . import HRauth
 from . import HRget
 from . import HRday
 from . import HRdayList
+from . import HRphone
 from . import HRpresence
 from . import HRtotalizator
 
@@ -124,28 +125,30 @@ class HRlo(object):
 
 
    def phone(self, names, phones):
-       return self.hr_get.report_phone(names, phones)
+       djson = self.hr_get.phone()
+       hr_phone = HRphone.HRphone(djson)
+       return hr_phone.report(names, phones)
 
 
    def presence(self, surname):
        csv_data = self.hr_get.presence()
-       presence = HRpresence.HRpresence(csv_data)
-       return presence.report(surname)
+       hr_presence = HRpresence.HRpresence(csv_data)
+       return hr_presence.report(surname)
 
 
    def totalizator(self, key=None):
-       hr_tot = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
+       hr_totalizator = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
        if key:
-           return hr_tot.get_value(key)
+           return hr_totalizator.get_value(key)
        else:
-           return hr_tot.report()
+           return hr_totalizator.report()
 
 
 
 def main():
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
-                                    description='HR manager',
+                                    description='HR manager.',
                                     formatter_class=argparse.RawTextHelpFormatter)
 
    parser.add_argument('--version', action='version',
@@ -199,7 +202,7 @@ def main():
 
    HRpresence.add_parser(parser)
 
-   HRget.add_parser_phone(parser)
+   HRphone.add_parser(parser)
 
    HRtotalizator.add_parser(parser)
 

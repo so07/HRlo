@@ -161,11 +161,17 @@ class HRpresence (object):
         return list(k for k,_ in itertools.groupby(sorted(r)))
 
     def report(self, name):
-        workers = self.get('name', name)
-        s = '\n'
-        for w in workers:
-           s += w.report()
-           s += '\n'
+
+        if isinstance(name, str):
+            workers = self.get('name', name)
+            l = [w.report() for w in workers]
+            s = '\n'.join(l)
+            s = '\n' + s + '\n'
+
+        elif isinstance(name, list):
+            l = [self.report(i) for i in name]
+            s = ''.join(l)
+
         return s
 
 

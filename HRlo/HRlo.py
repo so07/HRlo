@@ -15,16 +15,16 @@ from . import HRtotalizator
 from . import color
 from . import config as HRconfig
 
+
 class HRlo(object):
 
 
-   def __init__(self, dauth, config = {}, day_range=None):
-       self.hr_auth = HRauth.HRauth(**dauth)
+   def __init__(self, auth, config = {}, day_range=None):
+
+       self.hr_auth = auth
        self.hr_get = HRget.HRget(self.hr_auth)
 
-       self.days = None
-
-       self.day_range = day_range
+       self.days = None # initialization in init_data
 
        self.config = {}
        self.config.update( config )
@@ -70,28 +70,28 @@ class HRlo(object):
        self.days = [ HRday.HRday({'Fields':json['Fields'], 'Data':d}) for d in json['Data'] ]
 
 
-   def get_report_day(self, day = datetime.date.today()):
+   def report_day(self, day = datetime.date.today()):
        """Return report for a day.
           Return a HRday class."""
        self.init_data( DayRange(day, day) )
        return self
 
 
-   def get_report_week(self, day = datetime.datetime.today()):
+   def report_week(self, day = datetime.datetime.today()):
        """Return report for a week.
           Return a HRdayList class."""
        start, end = week_bounds(day)
-       return self.get_report(start, end, label="Weekly report")
+       return self.report(start, end, label="Weekly report")
 
 
-   def get_report_month(self, day = datetime.datetime.today()):
+   def report_month(self, day = datetime.datetime.today()):
        """Return report for a month.
           Return a HRdayList class."""
        start, end = month_bounds(day)
-       return self.get_report(start, end, label="Monthly report")
+       return self.report(start, end, label="Monthly report")
 
 
-   def get_report(self, start, end, label=''):
+   def report(self, start, end, label=''):
        """Return report for a time interval.
           Return a HRdayList class."""
        day_range = DayRange(start, end)
@@ -123,22 +123,23 @@ class HRlo(object):
        return _anomalies
 
 
-   def get_phone(self, surname):
-       return self.hr_get.phone(surname)
+   def phone(self, names, phones):
+       return self.hr_get.report_phone(names, phones)
 
 
-   def get_presence(self, surname):
+   def presence(self, surname):
        csv_data = self.hr_get.presence()
        presence = HRpresence.HRpresence(csv_data)
        return presence.report(surname)
 
 
-   def get_totalizator(self, key=None):
+   def totalizator(self, key=None):
        hr_tot = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
        if key:
            return hr_tot.get_value(key)
        else:
            return hr_tot.report()
+
 
 
 def main():
@@ -202,49 +203,45 @@ def main():
 
    HRtotalizator.add_parser(parser)
 
-   dauth = HRauth.add_parser(parser)
+   HRauth.add_parser(parser)
 
    args = parser.parse_args()
+
 
    config = {'today' : args.today}
 
    #config = {}
 
-   hr = HRlo(dauth, config)
+   hr_auth = HRauth.HRauth(**vars(args))
+
+   hr = HRlo(hr_auth, config)
 
    if args.from_day and args.to_day:
-      print(hr.get_report(args.from_day, args.to_day))
+      print(hr.report(args.from_day, args.to_day))
 
    if args.daily:
-      print(hr.get_report_day())
+      print(hr.report_day())
 
    if args.weekly:
-      print(hr.get_report_week())
+      print(hr.report_week())
 
    if args.monthly:
-      print(hr.get_report_month())
+      print(hr.report_month())
 
    if args.phone_name or args.phone_number:
-       djson = hr.hr_get.phone(names = args.phone_name, phones = args.phone_number)
-       print()
-       for d in djson['Data']:
-           for k, v in zip(djson['Fields'], d):
-               print(v)
-           print()
+       print(hr.phone(names = args.phone_name, phones = args.phone_number))
 
-   if args.presence:
-      for name in args.presence:
-          p = hr.get_presence(name)
-          print(p)
+   if  args.presence:
+       print(hr.presence(args.presence))
 
    if args.totalizators or args.get_totalizator:
-       print(hr.get_totalizator(args.get_totalizator))
+       print(hr.totalizator(args.get_totalizator))
 
    if not args.daily and not args.weekly and not args.monthly \
       and not args.from_day \
       and not args.phone_name and not args.phone_number and not args.presence \
       and not args.totalizators and not args.get_totalizator:
-      today = hr.get_report_day()
+      today = hr.report_day()
       if today:
           print("\nToday :")
           print(today)

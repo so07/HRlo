@@ -263,6 +263,21 @@ class HRget(object):
 
         return json_
 
+
+    def report_phone(self, names = [], phones = []):
+
+        djson = self.phone(names, phones)
+
+        l = []
+        for d in djson['Data']:
+            l.append('')
+            for k, v in zip(djson['Fields'], d):
+                l.append(v)
+        l.append('')
+
+        return "\n".join(l)
+
+
 #{{{ deprecated
     def phone_old(self, names):
 

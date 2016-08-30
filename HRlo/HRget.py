@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import re
-import sys
-import requests
 import datetime
 import calendar
 import argparse
@@ -10,7 +7,6 @@ import json
 from collections import OrderedDict
 
 from .logs.dayutils  import dayutils
-from .utils import NameParser
 
 from . import HRauth
 
@@ -205,15 +201,6 @@ class HRget(object):
 
     def phone(self, names = [], phones = []):
 
-        re_names = [ re.compile(i.upper()) for i in names ]
-        re_phones = [ re.compile(i.upper()) for i in phones ]
-
-        fields_name = ['ANSURNAM']
-        fields_phone = ['ANTELEF', 'ANMOBILTEL']
-
-        fields_to_return = ['ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL']
-        data_to_return   = []
-
         headers = {}
 
         params = {
@@ -228,54 +215,13 @@ class HRget(object):
         p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
 
         try:
-           list_phone = p.json()['Data'][:-1]
+           p.json()['Data'][:-1]
         except:
            return OrderedDict()
 
-        fields_ = p.json()['Fields']
+        json  = {'Fields' : p.json()['Fields'], 'Data' : p.json()['Data'][:-1]}
 
-        # convert data to ordered dict
-
-        json_ = {}
-
-        for worker in list_phone:
-           json = {k: v for k, v in zip(fields_, worker)}
-           l = []
-           for k in fields_to_return:
-              if json.get(k):
-                 l.append(json[k])
-           data_to_return.append(l)
-
-        json_['Fields'] = fields_to_return
-        json_['Data']   = data_to_return
-
-
-        # filter data
-        if re_names or re_phones:
-           l = []
-           for i in json_['Data']:
-               _name  = i[0]
-               _phone = " ".join( [ re.sub(r"[^0-9]+", "", j) for j in i[2:] ] )
-               l.extend( [ i for r in re_names if r.search(_name) ] )
-               l.extend( [ i for r in re_phones if r.search(_phone) ] )
-
-           json_['Data'] = l
-
-        return json_
-
-
-    def report_phone(self, names = [], phones = []):
-
-        djson = self.phone(names, phones)
-
-        l = []
-        for d in djson['Data']:
-            l.append('')
-            for k, v in zip(djson['Fields'], d):
-                l.append(v)
-        l.append('')
-
-        return "\n".join(l)
+        return json
 
 
 #{{{ deprecated
@@ -365,34 +311,13 @@ def add_parser(parser):
                             help='select year')
 
 
-def add_parser_phone(parser):
-
-   phone_parser = parser.add_argument_group('phone number options')
-
-   phone_parser.add_argument('-p', '--phone',
-                             dest = 'phone_name',
-                             default = [],
-                             nargs = '+',
-                             action = NameParser,
-                             metavar = "SURNAME",
-                             help="get phone number")
-
-   phone_parser.add_argument('-n', '--name-from-phone',
-                             dest = 'phone_number',
-                             default = [],
-                             nargs = '+',
-                             metavar = "PHONE",
-                             help="get name from phone number")
-
-
 def main ():
 
     parser = argparse.ArgumentParser(prog='HRget',
-                                     description='',
+                                     description='HR manager utility to get json data from HR portal.',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
-    add_parser_phone(parser)
 
     parser.add_argument('-v', '--verbose',
                         action="count", default=0,
@@ -401,6 +326,10 @@ def main ():
     parser.add_argument('-g', '--get',
                         action='store_true',
                         help="get day")
+
+    parser.add_argument('--phone',
+                        action='store_true',
+                        help="get phone of workers")
 
     parser.add_argument('--totalizators',
                         action='store_true',
@@ -454,15 +383,16 @@ def main ():
                 print()
 
 
-    if args.phone_name or args.phone_number:
+    if args.phone:
 
-        djson = hr_get.phone(names = args.phone_name, phones = args.phone_number)
+        djson = hr_get.phone()
 
-        print()
-        for d in djson['Data']:
-            for k, v in zip(djson['Fields'], d):
-                print(v)
-            print()
+        if args.verbose:
+            for d in djson['Data']:
+                print("---+")
+                for k, v in zip(djson['Fields'], d):
+                    print(v)
+                print("+---")
 
 
     if args.presence:

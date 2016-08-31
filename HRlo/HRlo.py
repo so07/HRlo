@@ -80,6 +80,11 @@ class HRlo(object):
 
        start, end = dayutils.week_bounds(day)
 
+       # check if week start and end are inside current month
+       month_bounds = dayutils.month_bounds(day)
+       start = max(start, month_bounds[0])
+       end = min(end, month_bounds[1])
+
        return self.get_report(start, end, label="Weekly report")
 
 

@@ -44,14 +44,41 @@ class test_HRlo_functionalities(unittest.TestCase):
     def test_HRlo_repr(self):
         x = self.hrlo.__repr__()
 
+    def test_HRlo_day(self):
+        self.hrlo.day()
+
+#    def test_HRlo_day_today(self):
+#        self.hrlo.day(datetime.datetime.today())
+
+    def test_HRlo_week(self):
+        self.hrlo.week()
+
+    def test_HRlo_week_today(self):
+        self.hrlo.week(datetime.datetime.today())
+
+    def test_HRlo_month(self):
+        self.hrlo.month()
+
+    def test_HRlo_month_today(self):
+        self.hrlo.month(datetime.datetime.today())
+
     def test_HRlo_report_day(self):
         self.hrlo.report_day()
+
+#    def test_HRlo_report_day_today(self):
+#        self.hrlo.report_day(datetime.datetime.today())
 
     def test_HRlo_report_week(self):
         self.hrlo.report_week()
 
+    def test_HRlo_report_week_today(self):
+        self.hrlo.report_week(datetime.datetime.today())
+
     def test_HRlo_report_month(self):
         self.hrlo.report_month()
+
+    def test_HRlo_report_month_today(self):
+        self.hrlo.report_month(datetime.datetime.today())
 
     def test_HRlo_anomalies(self):
         self.hrlo.anomalies()

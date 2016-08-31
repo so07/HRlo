@@ -71,14 +71,14 @@ class HRlo(object):
        self.days = [ HRday.HRday({'Fields':json['Fields'], 'Data':d}) for d in json['Data'] ]
 
 
-   def report_day(self, day = datetime.date.today()):
+   def day(self, day = datetime.date.today()):
        """Return report for a day.
           Return a HRday class."""
        self.init_data( DayRange(day, day) )
        return self
 
 
-   def report_week(self, day = datetime.datetime.today()):
+   def week(self, day = datetime.datetime.today()):
        """Return report for a week.
           Return a HRdayList class."""
        start, end = week_bounds(day)
@@ -86,17 +86,17 @@ class HRlo(object):
        month_limits = month_bounds(day)
        start = max(start, month_limits[0])
        end = min(end, month_limits[1])
-       return self.report(start, end, label="Weekly report")
+       return self.get(start, end, label="Weekly report")
 
 
-   def report_month(self, day = datetime.datetime.today()):
+   def month(self, day = datetime.datetime.today()):
        """Return report for a month.
           Return a HRdayList class."""
        start, end = month_bounds(day)
-       return self.report(start, end, label="Monthly report")
+       return self.get(start, end, label="Monthly report")
 
 
-   def report(self, start, end, label=''):
+   def get(self, start, end, label=''):
        """Return report for a time interval.
           Return a HRdayList class."""
        day_range = DayRange(start, end)
@@ -117,6 +117,18 @@ class HRlo(object):
            l.append(i)
 
        return l
+
+
+   def report_day(self, day = datetime.date.today()):
+       return str(self.day(day))
+
+
+   def report_week(self, day = datetime.datetime.today()):
+       return str(self.week(day))
+
+
+   def report_month(self, day = datetime.date.today()):
+       return str(self.month(day))
 
 
    def anomalies(self):

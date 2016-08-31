@@ -127,7 +127,7 @@ class HRday(DayLog):
 
         self['time_lunch'] = self._get_lunch_time()
         self['time_ko'] = self._get_ko_time()
-        self['time_2work'] = self._get_hr_work_time()
+        self['time_2work'] = self._get_hr_real_work_time()
 
         # add timenet key to Daylog class
         self['timenet'] = self._get_timenet()

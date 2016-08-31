@@ -26,7 +26,7 @@ class test_HRday_inititalization(unittest.TestCase):
         d = HRday(json)
 
 
-class test_HRget_functionalities(unittest.TestCase):
+class test_HRday_functionalities(unittest.TestCase):
 
     config_file = HRauth_default['config_file']
 

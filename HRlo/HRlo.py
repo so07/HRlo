@@ -25,7 +25,7 @@ class HRlo(object):
        self.hr_auth = auth
        self.hr_get = HRget.HRget(self.hr_auth)
 
-       self.days = None # initialization in init_data
+       self.days = [] # initialization in init_data
 
        self.config = {}
        self.config.update( config )
@@ -128,7 +128,7 @@ class HRlo(object):
        return _anomalies
 
 
-   def phone(self, names, phones):
+   def phone(self, names=[], phones=[]):
        djson = self.hr_get.phone()
        hr_phone = HRphone.HRphone(djson)
        return hr_phone.report(names, phones)

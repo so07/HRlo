@@ -72,15 +72,13 @@ class HRlo(object):
 
 
    def day(self, day = datetime.date.today()):
-       """Return report for a day.
-          Return a HRday class."""
+       """Return HRday class for a day."""
        self.init_data( DayRange(day, day) )
        return self
 
 
    def week(self, day = datetime.datetime.today()):
-       """Return report for a week.
-          Return a HRdayList class."""
+       """Return HRdayList class for a week."""
        start, end = week_bounds(day)
        # check if week start and end are inside current month
        month_limits = month_bounds(day)
@@ -90,15 +88,13 @@ class HRlo(object):
 
 
    def month(self, day = datetime.datetime.today()):
-       """Return report for a month.
-          Return a HRdayList class."""
+       """Return HRdayList for a month."""
        start, end = month_bounds(day)
        return self.get(start, end, label="Monthly report")
 
 
    def get(self, start, end, label=''):
-       """Return report for a time interval.
-          Return a HRdayList class."""
+       """Return HRdayList for a day interval."""
        day_range = DayRange(start, end)
 
        self.init_data(day_range)
@@ -120,14 +116,17 @@ class HRlo(object):
 
 
    def report_day(self, day = datetime.date.today()):
+       """Return report from HRday class for a day."""
        return str(self.day(day))
 
 
    def report_week(self, day = datetime.datetime.today()):
+       """Return report from HRdayList class for a week."""
        return str(self.week(day))
 
 
    def report_month(self, day = datetime.date.today()):
+       """Return report from HRdayList class for a month."""
        return str(self.month(day))
 
 
@@ -141,18 +140,21 @@ class HRlo(object):
 
 
    def phone(self, names=[], phones=[]):
+       """Return report of names and phone numbers from HRphone class."""
        djson = self.hr_get.phone()
        hr_phone = HRphone.HRphone(djson)
        return hr_phone.report(names, phones)
 
 
    def presence(self, surname):
+       """Return report of workers presence from HRpresence class."""
        csv_data = self.hr_get.presence()
        hr_presence = HRpresence.HRpresence(csv_data)
        return hr_presence.report(surname)
 
 
    def totalizator(self, key=None):
+       """Return report of totalizators from HRtotalizator class."""
        hr_totalizator = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
        if key:
            return hr_totalizator.get_value(key)
@@ -211,7 +213,6 @@ def main():
    parser_range.add_argument("--to",
                              dest = 'to_day',
                              type=_date,
-                             #default=None,
                              default=datetime.date.today(),
                              metavar="YYYY-MM-DD",
                              help="to date YYYY-MM-DD (default %(default)s)")
@@ -229,28 +230,27 @@ def main():
 
    config = {'today' : args.today}
 
-   #config = {}
-
    hr_auth = HRauth.HRauth(**vars(args))
 
    hr = HRlo(hr_auth, config)
 
+
    if args.from_day and args.to_day:
-      print(hr.report(args.from_day, args.to_day))
+       print(hr.report(args.from_day, args.to_day))
 
    if args.daily:
-      print(hr.report_day())
+       print(hr.report_day())
 
    if args.weekly:
-      print(hr.report_week())
+       print(hr.report_week())
 
    if args.monthly:
-      print(hr.report_month())
+       print(hr.report_month())
 
    if args.phone_name or args.phone_number:
        print(hr.phone(names = args.phone_name, phones = args.phone_number))
 
-   if  args.presence:
+   if args.presence:
        print(hr.presence(args.presence))
 
    if args.totalizators or args.get_totalizator:

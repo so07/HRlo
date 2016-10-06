@@ -31,7 +31,7 @@ class HRauth(dict):
           self._remove_config_file()
 
       # read from config_file
-      self.update( self._read_config_file(kwargs['config_file']) )
+      self.update( self._read_config_file(self['config_file']) )
       # read from args
       self.update( {k: kwargs[k] for k in self['required'] if kwargs.get(k, None)} )
 

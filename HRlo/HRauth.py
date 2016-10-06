@@ -4,10 +4,7 @@ import requests
 import getpass
 import base64
 
-try:
-   from configparser import ConfigParser
-except:
-   from ConfigParser import ConfigParser
+from configparser import ConfigParser
 
 HRauth_default = {
     'config_file' : os.path.join( os.path.expanduser("~"), '.HRlo'),
@@ -37,7 +34,8 @@ class HRauth(dict):
 
       self._check_required()
 
-      self._get_password()
+      if not self.get('password', False):
+         self['password'] = self._encode(getpass.getpass())
 
       self._session = requests.Session()
 
@@ -46,45 +44,28 @@ class HRauth(dict):
               self._write_config_file(self['config_file'])
 
 
-   def _get_password(self):
+   def _encode(self, _pass):
 
-      if self.get('password', False):
-         self['password'] = self._password_decode()
+      if self['password_encoding'] == 'base64':
+          if isinstance(_pass, bytes):
+              _pass = base64.b64encode(_pass)
+          else:
+             _pass = base64.b64encode(_pass.encode('ascii'))
       else:
-         self['password'] = getpass.getpass()
+          pass
 
-
-   def _password_decode(self):
-      """Decode password"""
-
-      _enc  = self['password_encoding']
-      _pass = self['password']
-
-      if   _enc == 'clear':
-         _pass = _pass
-      elif _enc == 'base64':
-         _pass = base64.b64decode(_pass)
+      if isinstance(_pass, bytes):
+          _pass = _pass.decode()
 
       return _pass
 
 
-   def _password_encode(self):
-      """Encode password"""
+   def _decode(self, _pass):
 
-      _enc  = self['password_encoding']
-      _pass = self['password']
-
-
-      if   _enc == 'clear':
-         _pass = self['password']
-      elif _enc == 'base64':
-         if isinstance(_pass, bytes):
-            _pass = base64.b64encode(_pass)
-         else:
-            _pass = base64.b64encode(_pass.encode('ascii'))
-
-      if isinstance(_pass, bytes):
-          _pass = _pass.decode()
+      if self['password_encoding'] == 'base64':
+          _pass = base64.b64decode(_pass)
+      else:
+          pass
 
       return _pass
 
@@ -123,8 +104,7 @@ class HRauth(dict):
           parser.set(self.HRauth_config_option, 'idemploy', str(self['idemploy']))
 
        if self['save_password']:
-          _encoded = self._password_encode()
-          parser.set(self.HRauth_config_option, 'password', _encoded)
+          parser.set(self.HRauth_config_option, 'password', self['password'])
 
        with open(fname, "w") as f:
           parser.write(f)
@@ -145,9 +125,6 @@ class HRauth(dict):
    def idemploy(self):
        return "{:0>7}".format(str(self['idemploy']))
 
-   def password(self):
-       return self['password']
-
    def login_url(self):
        return 'https://' + self.host() + '/HRPortal/servlet/cp_login'
 
@@ -165,7 +142,7 @@ class HRauth(dict):
        return self._session
 
    def post(self):
-       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self['password'], 'm_cAction' : 'login'}
+       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self._decode(self['password']), 'm_cAction' : 'login'}
        return self.session().post(self.login_url(), params=auth, allow_redirects=False)
 
 
@@ -196,11 +173,6 @@ def add_parser(parser):
                            action='store_true',
                            help='Save HR authentication password in HRauth config file')
 
-   authparser.add_argument('--password-encoding',
-                           choices=['clear', 'base64'],
-                           default=HRauth_default['password_encoding'],
-                           help='Password encoding (default %(default)s)')
-
    authparser.add_argument('--remove-config-file',
                            action='store_true',
                            help='Remove HR config file')
@@ -229,3 +201,4 @@ def main ():
 
 if __name__ == '__main__':
     main()
+

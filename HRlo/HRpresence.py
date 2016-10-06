@@ -64,7 +64,7 @@ class presence (HashedDict):
             return False
 
     def is_present(self):
-        pass
+        return 'PRESENTE' in self['status']
 
     def is_at(self, city):
         pass

@@ -25,7 +25,7 @@ setup(
             'bin/HRday', 'bin/HRget',
             'bin/HRpresence', 'bin/HRcompany',
             'bin/HRtotalizator', 'bin/HRphone',
-            'bin/HRutils'],
+            'bin/HRutils', 'bin/HRauth'],
    cmdclass={'build_py': build_py},
 
    classifiers=[

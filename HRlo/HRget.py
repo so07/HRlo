@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import re
-import sys
-import requests
 import datetime
 import calendar
 import argparse
@@ -10,58 +7,38 @@ import json
 from collections import OrderedDict
 
 from .logs.dayutils  import dayutils
-from .utils import NameParser
 
 from . import HRauth
 
 class HRget(object):
 
-    def __init__(self, HRauth, verbose=False):
+    def __init__(self, HRauth, verbose=False, debug=False):
+
+        self.HRauth = HRauth
         self.verbose = verbose
-        self.host = HRauth.host()
 
         # set URLs
-        self.login_url    = 'https://' + self.host + '/HRPortal/servlet/cp_login'
-        self.sheet_url    = 'https://' + self.host + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
-        self.post_url     = 'https://' + self.host + '/HR-WorkFlow/servlet/SQLDataProviderServer'
-        self.portal_url   = 'https://' + self.host + '/HRPortal/servlet/SQLDataProviderServer'
-        self.presence_url = 'https://' + self.host + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
+        self.sheet_url    = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
+        self.post_url     = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/SQLDataProviderServer'
+        self.portal_url   = 'https://' + self.HRauth.host() + '/HRPortal/servlet/SQLDataProviderServer'
+        self.presence_url = 'https://' + self.HRauth.host() + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
 
-        # set employee
-        self.username = HRauth.username()
-        self.password = HRauth.password()
-        self.idemploy = "{:0>7}".format(str(HRauth.idemploy()))
-        #print(self.idemploy)
+        self.session = self.HRauth.session()
+        if not debug:
+            self.post = self.HRauth.post()
+        self.cookies = self.session.cookies
 
         if self.verbose > 1:
-           print (">>>USERNAME>>>", self.username)
-           print (">>>IDEMPLOY>>>", self.idemploy)
+           print (">>>USERNAME>>>", self.HRauth.username())
+           print (">>>IDEMPLOY>>>", self.HRauth.idemploy())
            #print ("[{}]@{}".format(__class__.__name__, sys._getframe().f_code.co_name))
+           print (">>>CODE>>>", self.post.status_code)
+           print (">>>HISTORY>>>", self.post.history)
+           print (">>>HEADERS>>>", self.post.headers)
+           print (">>>COOKIES>>>", self.post.cookies)
+           print (">>>LOCATION>>>", self.post.headers['location'])
+           #print (">>>PAGE>>>", self.post.text)
 
-        self.session = requests.Session()
-        self.cookies = None 
-
-        self.login()
-
-    def login(self):
-        auth = {'m_cUserName' : self.username, 'm_cPassword' : self.password, 'm_cAction' : 'login'}
-        r = self.session.post(self.login_url, params=auth, allow_redirects=False)
-        self.cookies = r.cookies
-
-        if self.verbose > 1:
-           print (">>>CODE>>>", r.status_code)
-           print (">>>HISTORY>>>", r.history)
-           print (">>>HEADERS>>>", r.headers)
-           print (">>>COOKIES>>>", r.cookies)
-           print (">>>LOCATION>>>", r.headers['location'])
-           #print (">>>PAGE>>>", r.text)
-
-        try:
-           if 'jsp/home.jsp' in r.headers['location']:
-              pass
-        except:
-           print("\n[HRget] *** ERROR *** on HR authentication!\n")
-           sys.exit(1)
 
     def get_range(self, day_range):
        data = []
@@ -91,19 +68,23 @@ class HRget(object):
 
 
     def _check_data(self, d, year, month, day):
-
+        # check data in month
         if len(d) < 1:
-            print("[HRget] ***ERROR***")
-            print("Data not found in date {}-{}".format(year, month) )
-            sys.exit(-1)
+            raise Exception("[HRget] *** ERROR *** Data not found in month {}-{}".format(year, month))
+        # check data in day
+        if day:
+            try:
+                d[day-1]
+            except:
+                raise Exception("[HRget] *** ERROR *** Data not found in day {}-{}-{}".format(year, month, day))
+
+            if day < 1:
+                raise Exception("[HRget] *** ERROR *** illegal day {}".format(day))
 
 
     def get(self, year  = datetime.datetime.today().year,
                   month = datetime.datetime.today().month,
                   day   = None):
-
-        str_month = "{:0>2}".format(month)
-        str_year  = "{:d}".format(year)
 
         num_days_in_month = calendar.monthrange(year, month)[1]
 
@@ -115,16 +96,11 @@ class HRget(object):
             print (">>>NUMDAYMONTH>>>", num_days_in_month)
             print (">>>LASTDAY>>>", last_day)
 
-        # COOKIES {{{
-        cookies = self.cookies
-        # }}}
-        # HEADERS {{{
         headers = {
-                   'Pragma': 'no-cache',
-                   'Cache-Control': 'no-cache'
+        #           'Pragma': 'no-cache',
+        #           'Cache-Control': 'no-cache'
                   }
-        # }}}
-        # PARAMS  {{{
+
         params = {
                   'rows' : 300,
                   'startrow' : '0',
@@ -132,9 +108,9 @@ class HRget(object):
                   'cmdhash':'89ff07d888efecba391f40eac7d04e9a',
                   'sqlcmd' : 'rows:hfpr_fcartellino3',
                   'IDCOMPANY':'000001',
-                  'IDEMPLOY': self.idemploy,
-                  'Anno': str_year,
-                  'Mese': str_month,
+                  'IDEMPLOY': self.HRauth.idemploy(),
+                  'Anno': "{:d}".format(year),
+                  'Mese': "{:0>2}".format(month),
                   'Visualiz':'N',
                   'LaFlexi':'N',
                   'LaFlexiProg':'N',
@@ -165,11 +141,10 @@ class HRget(object):
                   'TIPONOTESPESE':'1',
                   'ABILITATIMESHEET':'N'
                  }
-        # }}}
 
-        p = self.session.post(self.sheet_url, cookies=cookies)
+        p = self.session.post(self.sheet_url, cookies=self.cookies)
 
-        p = self.session.post(self.post_url, headers=headers, cookies=cookies, params=params)
+        p = self.session.post(self.post_url, headers=headers, cookies=self.cookies, params=params)
 
 
         d = p.json()['Data'][:last_day]
@@ -198,32 +173,23 @@ class HRget(object):
 
         date = datetime.date(year, month, 1) + datetime.timedelta(days=calendar.monthrange(year, month)[1])
 
-        # COOKIES {{{
-        cookies = self.cookies
-        # }}}
-        # HEADERS {{{
-        headers = {
-                   'Pragma': 'no-cache',
-                   'Cache-Control': 'no-cache'
-                  }
-        # }}}
-        # PARAMS {{{
+        headers = {}
+
         params = {
                   'rows' : 100,
                   'startrow' : '0',
                   'count' : 'false',
                   'cmdhash':'2e2926382311a0b72e72cd1e1cdc4ccc',
                   'sqlcmd' : 'rows:hfpr_fgadgetconta',
-                  'pIDEMPLOY': self.idemploy,
+                  'pIDEMPLOY': self.HRauth.idemploy(),
                   'pIDCOMPANY':'000001',
                   'pDATA':date,
                   'pADMIN':'',
                  }
-        # }}}
 
-        p = self.session.post(self.sheet_url, cookies=cookies)
+        p = self.session.post(self.sheet_url, cookies=self.cookies)
 
-        p = self.session.post(self.post_url, headers=headers, cookies=cookies, params=params)
+        p = self.session.post(self.post_url, headers=headers, cookies=self.cookies, params=params)
 
         d = p.json()['Data'][:-1]
         f = p.json()['Fields']
@@ -235,26 +201,8 @@ class HRget(object):
 
     def phone(self, names = [], phones = []):
 
-        re_names = [ re.compile(i.upper()) for i in names ]
-        re_phones = [ re.compile(i.upper()) for i in phones ]
+        headers = {}
 
-        fields_name = ['ANSURNAM']
-        fields_phone = ['ANTELEF', 'ANMOBILTEL']
-
-        fields_to_return = ['ANSURNAM', 'ANEMAIL', 'ANTELEF', 'ANMOBILTEL']
-        data_to_return   = []
-
-
-        # COOKIES {{{
-        cookies = self.cookies
-        # }}}
-        # HEADERS {{{
-        headers = {
-                   'Pragma': 'no-cache',
-                   'Cache-Control': 'no-cache'
-                  }
-        # }}}
-        # PARAMS  {{{
         params = {
                   'rows'      : '2000',
                   'startrow'  : '0',
@@ -263,45 +211,18 @@ class HRget(object):
                   'sqlcmd'    : 'q_rubrica',
                   'pANSURNAM' : '',
                  }
-        # }}}
 
-        p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
+        p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
 
         try:
-           list_phone = p.json()['Data'][:-1]
+           p.json()['Data'][:-1]
         except:
            return OrderedDict()
 
-        fields_ = p.json()['Fields']
+        json  = {'Fields' : p.json()['Fields'], 'Data' : p.json()['Data'][:-1]}
 
-        # convert data to ordered dict
+        return json
 
-        json_ = {}
-
-        for worker in list_phone:
-           json = {k: v for k, v in zip(fields_, worker)}
-           l = []
-           for k in fields_to_return:
-              if json.get(k):
-                 l.append(json[k])
-           data_to_return.append(l)
-
-        json_['Fields'] = fields_to_return
-        json_['Data']   = data_to_return
-
-
-        # filter data
-        if re_names or re_phones:
-           l = []
-           for i in json_['Data']:
-               _name  = i[0]
-               _phone = " ".join( [ re.sub(r"[^0-9]+", "", j) for j in i[2:] ] )
-               l.extend( [ i for r in re_names if r.search(_name) ] )
-               l.extend( [ i for r in re_phones if r.search(_phone) ] )
-
-           json_['Data'] = l
-
-        return json_
 
 #{{{ deprecated
     def phone_old(self, names):
@@ -313,16 +234,8 @@ class HRget(object):
 
             name = n.upper()
 
-            # COOKIES {{{
-            cookies = self.cookies
-            # }}}
-            # HEADERS {{{
-            headers = {
-                       'Pragma': 'no-cache',
-                       'Cache-Control': 'no-cache'
-                      }
-            # }}}
-            # PARAMS  {{{
+            headers = {}
+
             params = {
                       'rows'      : '5',
                       'startrow'  : '0',
@@ -332,9 +245,8 @@ class HRget(object):
                       'queryfilter' :"ANSURNAM like '" + name + "%'",
                       'pANSURNAM' : '',
                      }
-            # }}}
 
-            p = self.session.post(self.portal_url, headers=headers, cookies=cookies, params=params)
+            p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
 
             try:
                list_phone = p.json()['Data'][:-1]
@@ -368,8 +280,17 @@ class HRget(object):
 
         csv_data = p.text
 
-        return csv_data
+        return {'csv_data' : csv_data}
 
+
+    def read(self, f):
+        with open(f, 'r') as fp:
+            j = json.load(fp)
+        return j
+
+    def dump(self, f, j):
+        with open(f, 'w') as fp:
+           json.dump(j, fp)
 
 
 
@@ -390,34 +311,13 @@ def add_parser(parser):
                             help='select year')
 
 
-def add_parser_phone(parser):
-
-   phone_parser = parser.add_argument_group('phone number options')
-
-   phone_parser.add_argument('-p', '--phone',
-                             dest = 'phone_name',
-                             default = [],
-                             nargs = '+',
-                             action = NameParser,
-                             metavar = "SURNAME",
-                             help="get phone number")
-
-   phone_parser.add_argument('-n', '--name-from-phone',
-                             dest = 'phone_number',
-                             default = [],
-                             nargs = '+',
-                             metavar = "PHONE",
-                             help="get name from phone number")
-
-
 def main ():
 
     parser = argparse.ArgumentParser(prog='HRget',
-                                     description='',
+                                     description='HR manager utility to get json data from HR portal.',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
-    add_parser_phone(parser)
 
     parser.add_argument('-v', '--verbose',
                         action="count", default=0,
@@ -426,6 +326,10 @@ def main ():
     parser.add_argument('-g', '--get',
                         action='store_true',
                         help="get day")
+
+    parser.add_argument('--phone',
+                        action='store_true',
+                        help="get phone of workers")
 
     parser.add_argument('--totalizators',
                         action='store_true',
@@ -436,17 +340,27 @@ def main ():
                         help="get presence of worker")
 
     parser.add_argument('--dump',
-                        dest = 'file_out',
+                        dest='file_out',
                         help="dump to file")
+
+    parser.add_argument('--read',
+                        dest='file_input',
+                        help="read from file")
 
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
 
+    djson = None
+
 
     auth = HRauth.HRauth(**vars(args))
 
     hr_get = HRget(auth, verbose=args.verbose)
+
+
+    if args.file_input:
+        djson = hr_get.read(args.file_input)
 
 
     if args.get:
@@ -456,12 +370,6 @@ def main ():
         if args.verbose:
             for k, v in zip(djson['Fields'], djson['Data']):
                 print(k, " = ", v)
-
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                json.dump(djson, f)
-            #with open(args.file_out, 'r') as f:
-            #    djson = json.load(f)
 
 
     if args.totalizators:
@@ -474,36 +382,29 @@ def main ():
                     print(k, " = ", v)
                 print()
 
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                json.dump(djson, f)
 
+    if args.phone:
 
-    if args.phone_name or args.phone_number:
+        djson = hr_get.phone()
 
-        djson = hr_get.phone(names = args.phone_name, phones = args.phone_number)
-
-        print()
-        for d in djson['Data']:
-            for k, v in zip(djson['Fields'], d):
-                print(v)
-            print()
-
-        if args.file_out:
-            with open(args.file_out, 'a') as f:
-                json.dump(djson, f)
+        if args.verbose:
+            for d in djson['Data']:
+                print("---+")
+                for k, v in zip(djson['Fields'], d):
+                    print(v)
+                print("+---")
 
 
     if args.presence:
 
-        csv = hr_get.presence()
+        djson = hr_get.presence()
 
         if args.verbose:
-            print(csv)
+            print(djson)
 
-        if args.file_out:
-            with open(args.file_out, 'w') as f:
-                f.write(csv)
+
+    if args.file_out:
+        hr_get.dump(f, djson)
 
 
 

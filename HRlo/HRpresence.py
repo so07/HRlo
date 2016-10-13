@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import re
 import csv
+import json
 import argparse
 import itertools
 
@@ -63,7 +64,7 @@ class presence (HashedDict):
             return False
 
     def is_present(self):
-        pass
+        return 'PRESENTE' in self['status']
 
     def is_at(self, city):
         pass
@@ -71,9 +72,9 @@ class presence (HashedDict):
 
 class HRpresence (object):
 
-    def __init__ (self, csv_data):
-        self.csv_data = csv_data
-        self.raw_presence = [ presence(r) for r in self._csv_read(csv_data) ]
+    def __init__ (self, json):
+        self.csv_data = json['csv_data']
+        self.raw_presence = [ presence(r) for r in self._csv_read(self.csv_data) ]
         self.presence = self._csv_refine()
 
     def _csv_refine(self):
@@ -98,22 +99,25 @@ class HRpresence (object):
         reader = csv.DictReader(list_csv_data, delimiter=';')
         return reader
 
-    def _cvs_write(self):
-        pass
-
-    def dump_csv(self, file_out):
-        with open(file_out, 'w') as f:
-            f.write(self.csv_data)
+    def dump_csv(self, f):
+        with open(f, 'w') as fp:
+            fp.write(self.csv_data)
 
     @classmethod
-    def read_csv(self, file_input):
-        with open(file_input, 'r') as f:
-            csv_data = f.read()
-        return csv_data
+    def read_csv(self, f):
+        with open(f, 'r') as fp:
+            csv_data = fp.read()
+        return {'csv_data' : csv_data}
 
+    def dump_json(self, f):
+        with open(f, 'w') as fp:
+            json.dump({'csv_data' : self.csv_data}, fp)
 
-    def dump_data(self, file_out, raw=True):
-        pass
+    @classmethod
+    def read_json(self, f):
+        with open(f, 'r') as fp:
+            j = json.load(fp)
+        return j
 
     def __len__(self):
         return len(self.presence)
@@ -157,11 +161,17 @@ class HRpresence (object):
         return list(k for k,_ in itertools.groupby(sorted(r)))
 
     def report(self, name):
-        workers = self.get('name', name)
-        s = '\n'
-        for w in workers:
-           s += w.report()
-           s += '\n'
+
+        if isinstance(name, str):
+            workers = self.get('name', name)
+            l = [w.report() for w in workers]
+            s = '\n'.join(l)
+            s = '\n' + s + '\n'
+
+        elif isinstance(name, list):
+            l = [self.report(i) for i in name]
+            s = ''.join(l)
+
         return s
 
 
@@ -182,46 +192,56 @@ def add_parser(parser):
 def main():
 
     parser = argparse.ArgumentParser(prog='HRpresence',
-                                     description='',
+                                     description='HR manager utility for workers presence.',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)
 
     parser.add_argument('--dump',
                         dest = 'file_out',
-                        help='dump data to file in csv format')
+                        help='dump data to file')
 
     parser.add_argument('--read',
-                        dest = 'file_input',
-                        help='read data from file in csv format')
+                        dest='file_input',
+                        help='read data from file')
+
+    parser.add_argument('--format',
+                        dest='file_format',
+                        choices=['csv', 'json'],
+                        default='csv',
+                        help='file format')
 
     HRauth.add_parser(parser)
 
     args = parser.parse_args()
 
 
-    if args.file_input:
+    if args.file_input and args.file_format == 'csv':
 
-        csv_data = HRpresence.read_csv(args.file_input)
+        djson = HRpresence.read_csv(args.file_input)
+
+    elif args.file_input and args.file_format == 'json':
+
+        djson = HRpresence.read_json(args.file_input)
 
     else:
 
-        auth = HRauth.HRauth(**vars(args))
+        hr_auth = HRauth.HRauth(**vars(args))
+        hr_get = HRget.HRget(hr_auth, verbose=False)
 
-        h = HRget.HRget(auth, verbose=False)
-
-        # get presence in scv format
-        csv_data = h.presence()
+        djson = hr_get.presence()
 
 
-    p = HRpresence(csv_data)
+    p = HRpresence(djson)
 
     if args.presence:
         for name in args.presence:
             print(p.report(name))
 
-    if args.file_out:
+    if args.file_out and args.file_format == 'csv':
         p.dump_csv(args.file_out)
+    elif args.file_out and args.file_format == 'json':
+        p.dump_json(args.file_out)
 
 
 if __name__ == '__main__':

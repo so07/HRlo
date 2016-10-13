@@ -3,13 +3,22 @@ import re
 import argparse
 import datetime
 
-from .logs.dayutils import dayutils
+from .logs.dayutils import dayutils, sec2str
+
+
+def to_str(x):
+    """Convert seconds or datetime.timedelta to string in format HH:MM:SS."""
+    if isinstance(x, datetime.timedelta):
+        return sec2str(x.total_seconds())
+    else:
+        return sec2str(x)
 
 def hr2seconds(HRtime):
     """Convert time from HR units to seconds.
        Return seconds in float.
     """
     return float(HRtime) *60.0*60.0
+
 
 def hr2time(HRtime, format=False):
     """Convert time from HR units to timedelta.
@@ -22,6 +31,7 @@ def hr2time(HRtime, format=False):
     else:
         return dt
     #return datetime.timedelta(seconds=hr2seconds(HRtime))
+
 
 def time_sum(l):
     d = datetime.timedelta(0)
@@ -36,6 +46,15 @@ def time_sum(l):
         else:
             d += dt
     return d
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 
 class HashedDict (dict):
 

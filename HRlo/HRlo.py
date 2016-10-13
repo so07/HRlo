@@ -1,103 +1,124 @@
 #!/usr/bin/env python3
-import re
-import sys
 import datetime
 import argparse
 
-from .logs.dayutils import dayutils
-from .utils import NameParser
+from .logs.dayutils import day_range as DayRange
+from .logs.dayutils import week_bounds, month_bounds, month_weeks_bounds
 
 from . import HRauth
 from . import HRget
 from . import HRday
 from . import HRdayList
+from . import HRphone
 from . import HRpresence
 from . import HRtotalizator
 
 from . import color
 from . import config as HRconfig
 
+
 class HRlo(object):
 
-   def __init__(self, dauth, config = {}, day_range=None):
-       self.auth = HRauth.HRauth(**dauth)
-       self.hrget = HRget.HRget(self.auth)
 
-       self.data = None
+   def __init__(self, auth, config = {}, day_range=None):
 
-       self.day_range = day_range
+       self.hr_auth = auth
+       self.hr_get = HRget.HRget(self.hr_auth)
+
+       self.days = [] # initialization in init_data
 
        self.config = {}
        self.config.update( config )
 
+
    def __str__ (self):
        s = ''
-       for i in self.data:
+       for i in self.days:
            s += str(i) + '\n'
        return s
 
+
    def __getitem__(self, key):
-       if not self.data:
+       if not self.days:
            raise KeyError("no data for {}".format(key))
        if not isinstance(key, datetime.datetime) and \
           not isinstance(key, datetime.date) and \
-          not isinstance(key, dayutils.day_range) and \
+          not isinstance(key, DayRange) and \
           not isinstance(key, slice):
           print("@__getitem__ NOT datetime.datetime")
           return None
-       if isinstance(key, dayutils.day_range):
-          l = [ d for d in self.data if d.day().date() in key ]
+       if isinstance(key, DayRange):
+          l = [ d for d in self.days if d.day().date() in key ]
           return l
        elif isinstance(key, datetime.datetime):
-          l = [ d for d in self.data if d.day().date() == key.date() ]
+          l = [ d for d in self.days if d.day().date() == key.date() ]
           return l
        elif isinstance(key, datetime.date):
-          l = [ d for d in self.data if d.day().date() == key ]
+          l = [ d for d in self.days if d.day().date() == key ]
           return l
        elif isinstance(key, slice):
-          #print( key.start.day-1, key.stop.day-1)
-          return self.data[key.start.day-1:key.stop.day-1]
+          return self.days[key.start.day-1:key.stop.day-1]
        else:
-          return self.data[key.day-1]
+          return self.days[key.day-1]
 
 
    def init_data(self, day_range=None):
        if day_range:
-          json = self.hrget.get_range(day_range)
+          json = self.hr_get.get_range(day_range)
        else:
-          json = self.hrget.get()
+          json = self.hr_get.get()
 
-       fields, HRdata = json['Fields'], json['Data']
-       self.data = [ HRday.HRday(fields, day) for day in HRdata]
+       self.days = [ HRday.HRday({'Fields':json['Fields'], 'Data':d}) for d in json['Data'] ]
 
 
-   def get_report_day(self, day = datetime.date.today()):
-       self.init_data( dayutils.day_range(day, day) )
+   def day(self, day = datetime.date.today()):
+       """Return HRday class for a day."""
+       self.init_data( DayRange(day, day) )
        return self
 
 
-   def get_report_week(self, day = datetime.datetime.today()):
-
-       start, end = dayutils.week_bounds(day)
-
+   def week(self, day = datetime.datetime.today()):
+       """Return HRdayList class for a week."""
+       start, end = week_bounds(day)
        # check if week start and end are inside current month
-       month_bounds = dayutils.month_bounds(day)
-       start = max(start, month_bounds[0])
-       end = min(end, month_bounds[1])
-
-       return self.get_report(start, end, label="Weekly report")
-
-
-   def get_report_month(self, day = datetime.datetime.today()):
-
-       start, end = dayutils.month_bounds(day)
-
-       return self.get_report(start, end, label="Monthly report")
+       month_limits = month_bounds(day)
+       start = max(start, month_limits[0])
+       end = min(end, month_limits[1])
+       return self.get(start, end, label="Weekly report", overtime=self.config.get('overtime', 0))
 
 
-   def get_report(self, start, end, label = ''):
+   def month(self, day = datetime.datetime.today()):
+       """Return HRdayList for a month."""
+       start, end = month_bounds(day)
+       return self.get(start, end, label="Monthly report")
 
-       day_range = dayutils.day_range(start, end)
+
+   def month_weeks(self, day = datetime.datetime.today()):
+       """Return a list of HRdayList for month weeks."""
+       _hrdaylist = []
+       # get month bounds
+       month_limits = month_bounds(day)
+       # get today bound
+       after_bound = datetime.datetime.today().date()
+       if self.config.get('today'):
+           # get yesterday as bound
+           after_bound = datetime.datetime.today().date() - datetime.timedelta(days=1)
+       for w in month_weeks_bounds(day):
+           start = w[0]
+           if start > after_bound:
+               break
+           # check if week end are inside current month
+           end = min(w[1], month_limits[1])
+           # check if week end are after today
+           end = min(end, after_bound)
+           # get HRdayList for this week
+           _hrdaylist.append(self.get(start, end, overtime=self.config.get('overtime', 0)))
+       return _hrdaylist
+
+
+   def get(self, start, end, label='', overtime=0):
+       """Return HRdayList for a day interval."""
+       day_range = DayRange(start, end)
 
        self.init_data(day_range)
 
@@ -109,58 +130,75 @@ class HRlo(object):
        if label:
            _label = "{} : {}".format( label, _label)
 
-       l = HRdayList.HRdayList(label=_label)
+       l = HRdayList.HRdayList(label=_label, overtime=overtime)
        for i in self[day_range]:
            if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
+
        return l
 
 
+   def report(self, start, end):
+       return str(self.get(start, end))
+
+
+   def report_day(self, day = datetime.date.today()):
+       """Return report from HRday class for a day."""
+       return str(self.day(day))
+
+
+   def report_week(self, day = datetime.datetime.today()):
+       """Return report from HRdayList class for a week."""
+       return str(self.week(day))
+
+
+   def report_month(self, day = datetime.date.today()):
+       """Return report from HRdayList class for a month."""
+       return str(self.month(day))
+
+
+   def report_month_weeks(self, day = datetime.date.today()):
+       """Return report from HRdayList class for a month."""
+       return "\n".join([ str(w) for w in self.month_weeks(day)])
+
+
    def anomalies(self):
-       _anomalies = [d for d in self.data if d.anomaly()]
+       _anomalies = [d for d in self.days if d.anomaly()]
        if _anomalies:
            col = color.color(color.RED)( str )
            warning = "WARNING : {} anomalies found : {}".format(len(_anomalies),  [ str(d.day().date()) for d in _anomalies ] )
            print( col(warning) )
        return _anomalies
 
-   def get_report_all(self):
 
-       day = self.get_report_day()
-       #print(day)
-       week = self.get_report_week()
-       #print(week)
-       month = self.get_report_month()
-       #print(month)
+   def phone(self, names=[], phones=[]):
+       """Return report of names and phone numbers from HRphone class."""
+       djson = self.hr_get.phone()
+       hr_phone = HRphone.HRphone(djson)
+       return hr_phone.report(names, phones)
 
-       return day, week, month
 
-   def report(self):
-       d, w, m = self.get_report_all()
-       print(d)
-       print(w)
-       print(m)
+   def presence(self, surname):
+       """Return report of workers presence from HRpresence class."""
+       csv_data = self.hr_get.presence()
+       hr_presence = HRpresence.HRpresence(csv_data)
+       return hr_presence.report(surname)
 
-   def get_phone(self, surname):
-       return self.hrget.phone(surname)
 
-   def get_presence(self, surname):
-       csv_data = self.hrget.presence()
-       presence = HRpresence.HRpresence(csv_data)
-       return presence.report(surname)
-
-   def get_totalizator(self, key=None):
-       hr_tot = HRtotalizator.HRtotalizator(self.hrget.totalizators())
+   def totalizator(self, key=None):
+       """Return report of totalizators from HRtotalizator class."""
+       hr_totalizator = HRtotalizator.HRtotalizator(self.hr_get.totalizators())
        if key:
-           return hr_tot.get_value(key)
+           return hr_totalizator.get_value(key)
        else:
-           return hr_tot.report()
+           return hr_totalizator.report()
+
 
 
 def main():
 
    parser = argparse.ArgumentParser(prog='HRlo (aka accaerralo)',
-                                    description='',
+                                    description='HR manager.',
                                     formatter_class=argparse.RawTextHelpFormatter)
 
    parser.add_argument('--version', action='version',
@@ -182,9 +220,18 @@ def main():
                             action='store_true',
                             help='monthly report')
 
+   parser_todo.add_argument('-M', '--week-monthly',
+                            action='store_true',
+                            help='monthly report week by week')
+
    parser_todo.add_argument('-t', '--today',
                             action='store_true',
                             help='keep today in reports')
+
+   parser_todo.add_argument('-o', '--overtime',
+                            type=int,
+                            default=0,
+                            help='overtime hours. Remove overtime from timenets. Only supported in weekly and month week by week report. (default %(default)s)')
 
 
    parser_range = parser.add_argument_group('range days options')
@@ -207,60 +254,57 @@ def main():
    parser_range.add_argument("--to",
                              dest = 'to_day',
                              type=_date,
-                             #default=None,
                              default=datetime.date.today(),
                              metavar="YYYY-MM-DD",
                              help="to date YYYY-MM-DD (default %(default)s)")
 
    HRpresence.add_parser(parser)
 
-   HRget.add_parser_phone(parser)
+   HRphone.add_parser(parser)
 
    HRtotalizator.add_parser(parser)
 
-   dauth = HRauth.add_parser(parser)
+   HRauth.add_parser(parser)
 
    args = parser.parse_args()
 
-   config = {'today' : args.today}
 
-   #config = {}
+   config = {'today' : args.today, 'overtime' : args.overtime}
 
-   hr = HRlo(dauth, config)
+   hr_auth = HRauth.HRauth(**vars(args))
+
+   hr = HRlo(hr_auth, config)
+
 
    if args.from_day and args.to_day:
-      print(hr.get_report(args.from_day, args.to_day))
+       print(hr.report(args.from_day, args.to_day))
 
    if args.daily:
-      print(hr.get_report_day())
+       print(hr.report_day())
 
    if args.weekly:
-      print(hr.get_report_week())
+       print(hr.report_week())
 
    if args.monthly:
-      print(hr.get_report_month())
+       print(hr.report_month())
+
+   if args.week_monthly:
+       print(hr.report_month_weeks())
 
    if args.phone_name or args.phone_number:
-       djson = hr.hrget.phone(names = args.phone_name, phones = args.phone_number)
-       print()
-       for d in djson['Data']:
-           for k, v in zip(djson['Fields'], d):
-               print(v)
-           print()
+       print(hr.phone(names = args.phone_name, phones = args.phone_number))
 
    if args.presence:
-      for name in args.presence:
-          p = hr.get_presence(name)
-          print(p)
+       print(hr.presence(args.presence))
 
    if args.totalizators or args.get_totalizator:
-       print(hr.get_totalizator(args.get_totalizator))
+       print(hr.totalizator(args.get_totalizator))
 
-   if not args.daily and not args.weekly and not args.monthly \
+   if not args.daily and not args.weekly and not args.monthly and not args.week_monthly \
       and not args.from_day \
       and not args.phone_name and not args.phone_number and not args.presence \
       and not args.totalizators and not args.get_totalizator:
-      today = hr.get_report_day()
+      today = hr.report_day()
       if today:
           print("\nToday :")
           print(today)

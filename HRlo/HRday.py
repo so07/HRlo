@@ -47,6 +47,7 @@ class HRday(DayLog):
         'optional maternity leave not paied' : 'MAT./PAT. FACOLT. NON RETR (7 - 12 ANNI)',
         'relative bereavement'               : 'PERMESSO LUTTO AFFINI',
         'bereavement'                        : 'PERMESSO LUTTO E GRAVI MOTIVI',
+        'strike'                             : 'SCIOPERO',
     }
 
     sub_times_to_timenet = ['ko', 'bankhours']
@@ -54,20 +55,20 @@ class HRday(DayLog):
                             'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
                             'disease', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                             'optional maternity leave', 'optional maternity leave not paied',
-                            'relative bereavement', 'bereavement']
+                            'relative bereavement', 'bereavement', 'strike']
 
     sub_times_to_hr = ['rol', 'dayoff',
                        'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
                        'disease', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                        'optional maternity leave', 'optional maternity leave not paied',
-                       'relative bereavement', 'bereavement']
+                       'relative bereavement', 'bereavement', 'strike']
 
     time_for_is_working = ['dayoff',
                            'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
                            'disease', 'disease_company', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                            'bloodletting', 'marrowletting',
                            'optional maternity leave', 'optional maternity leave not paied',
-                           'relative bereavement', 'bereavement']
+                           'relative bereavement', 'bereavement', 'strike']
 
     def __init__(self, field = None, data = None, label = None):
 

@@ -84,7 +84,7 @@ class HRlo(object):
        month_limits = month_bounds(day)
        start = max(start, month_limits[0])
        end = min(end, month_limits[1])
-       return self.get(start, end, label="Weekly report")
+       return self.get(start, end, label="Weekly report", overtime=self.config.get('overtime', 0))
 
 
    def month(self, day = datetime.datetime.today()):
@@ -112,11 +112,11 @@ class HRlo(object):
            # check if week end are after today
            end = min(end, after_bound)
            # get HRdayList for this week
-           _hrdaylist.append(self.get(start, end))
+           _hrdaylist.append(self.get(start, end, overtime=self.config.get('overtime', 0)))
        return _hrdaylist
 
 
-   def get(self, start, end, label=''):
+   def get(self, start, end, label='', overtime=0):
        """Return HRdayList for a day interval."""
        day_range = DayRange(start, end)
 
@@ -130,12 +130,16 @@ class HRlo(object):
        if label:
            _label = "{} : {}".format( label, _label)
 
-       l = HRdayList.HRdayList(label=_label)
+       l = HRdayList.HRdayList(label=_label, overtime=overtime)
        for i in self[day_range]:
            if i.is_today() and not self.config.get('today', False): continue
            l.append(i)
 
        return l
+
+
+   def report(self, start, end):
+       return str(self.get(start, end))
 
 
    def report_day(self, day = datetime.date.today()):
@@ -224,6 +228,11 @@ def main():
                             action='store_true',
                             help='keep today in reports')
 
+   parser_todo.add_argument('-o', '--overtime',
+                            type=int,
+                            default=0,
+                            help='overtime hours. Remove overtime from timenets. Only supported in weekly and month week by week report. (default %(default)s)')
+
 
    parser_range = parser.add_argument_group('range days options')
 
@@ -260,7 +269,7 @@ def main():
    args = parser.parse_args()
 
 
-   config = {'today' : args.today}
+   config = {'today' : args.today, 'overtime' : args.overtime}
 
    hr_auth = HRauth.HRauth(**vars(args))
 

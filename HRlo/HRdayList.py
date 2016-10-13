@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from .HRday import HRday
 from .utils import to_str
+from .logs.dayutils import day_range, week_bounds, month_weeks_bounds
 
 class HRdayList(list):
 
@@ -51,8 +52,16 @@ class HRdayList(list):
        s += "{:.<25}".format( "Timenet mean" )
        s += "{}\n".format( to_str(self.mean(self.hrday.timenet())) )
 
-       s += "{:.<25}".format("Timenets")
+       s += "{:.<25}".format("Timenets per day")
        s += "[{}]\n".format( ", ".join([ to_str(d.timenet()) for d in self if d.working()]) )
+
+       if len(self.week_bounds()) > 1:
+           s += "{:.<25}".format("Timenets per week")
+           s += "[{}]\n".format( ", ".join([ to_str(d) for d in self.timenet_weeks() ]) )
+           s += "{:.<25}".format("Working days per week")
+           s += "{}\n".format( [ len([j for j in i if j]) for i in self._get_list_attr('working', weeks=True) ] )
+           s += "{:.<25}".format("Week bounds")
+           s += "[{}]\n".format(", ".join( [ "{}/{}".format(s, e) for s, e in self.week_bounds() ] ))
 
        if self.anomaly():
            s += "{:.<25}".format( "Anomaly" )
@@ -85,10 +94,46 @@ class HRdayList(list):
                self.hrday[k] = args[k]
 
 
-    def _get_list_attr(self, attr, days=False):
+    def __getitem__(self, index):
+        if isinstance(index, int):
+            return super(HRdayList, self).__getitem__(index)
+        else:
+            if isinstance(index, datetime):
+                index = index.date()
+            for d in self:
+                if d['date'].date() == index:
+                    return d
+            raise IndexError("HRdayList index out of range")
+
+
+    def week_bounds(self):
+        _weeks = []
+        d = self[0]['date']
+        while (d.date() < week_bounds(self[-1]['date'])[1]):
+            _weeks.append(week_bounds(d))
+            d += timedelta(days=7)
+        return _weeks
+
+
+    def days_per_week(self):
+        _days_per_week = []
+        for w in self.week_bounds():
+            l = HRdayList()
+            for d in day_range(w[0], w[1]):
+                try:
+                    l.append(self[d])
+                except:
+                    pass
+            _days_per_week.append(l)
+        return _days_per_week
+
+
+    def _get_list_attr(self, attr, days=False, weeks=False):
         """Return list of values of attributes attr from HRday list."""
         if days:
             return [i for i in self if getattr(i, attr)()]
+        elif weeks:
+            return [ [getattr(d, attr)() for d in w] for w in self.days_per_week() ]
         else:
             return [getattr(i, attr)() for i in self]
 
@@ -135,6 +180,12 @@ class HRdayList(list):
             if self.config.get('overtime'):
                 tnet -= timedelta(hours=self.config['overtime']).total_seconds()
             return tnet
+
+    def timenet_weeks(self, list=False):
+        if list:
+            return self._get_list_attr('timenet', weeks=True)
+        else:
+            return  [ sum(w) for w in self.timenet_weeks(list=True) ]
 
 
     def mean(self, t):

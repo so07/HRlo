@@ -7,11 +7,13 @@ from .utils import to_str
 class HRdayList(list):
 
 
-    def __init__(self, label=None):
+    def __init__(self, label=None, **kwargs):
 
        self.hrday = HRday()
 
        self.label = label
+
+       self.config = kwargs
 
        #self_hr_time = {}
        #self._hr_time['net'] = 0
@@ -36,7 +38,7 @@ class HRdayList(list):
        s += " {} ".format( "for HR" )
        s += "{}\n".format( to_str(self.hrday['HR times']['up']) )
        s += "{:.<25}".format( "Timenet" )
-       s += "{:<10}".format( to_str(self.hrday.timenet()) )
+       s += "{:<10}".format( to_str(self.timenet()) )
        s += " {} ".format( "for HR" )
        s += "{}\n".format( to_str(self.hrday['HR times']['net']) )
        s += "{:.<25}".format( "Time to work" )
@@ -125,11 +127,14 @@ class HRdayList(list):
             return len(self.working(list=True))
 
 
-    #def timenet(self, list=False):
-    #    if list:
-    #        return self._get_list_attr('timenet')
-    #    else:
-    #        return sum(self.timenet(list=True))
+    def timenet(self, list=False):
+        if list:
+            return self._get_list_attr('timenet')
+        else:
+            tnet = sum(self.timenet(list=True))
+            if self.config.get('overtime'):
+                tnet -= timedelta(hours=self.config['overtime']).total_seconds()
+            return tnet
 
 
     def mean(self, t):

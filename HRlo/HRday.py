@@ -179,10 +179,11 @@ class HRday(DayLog):
        s += "{:<10}".format( utils.to_str(self.time_to_work()) )
        s += '\n'
 
-       # percentage of worked time
-       s += "{:.<25}".format( "Worked time in %" )
-       s += "{:.1f}%".format( 100.0*self.uptime().total_seconds()/self.time_to_work() )
-       s += '\n'
+       if self.time_to_work():
+           # percentage of worked time
+           s += "{:.<25}".format( "Worked time in %" )
+           s += "{:.1f}%".format( 100.0*self.uptime().total_seconds()/self.time_to_work() )
+           s += '\n'
 
        if not self.is_today():
           s += "{:.<25}".format( "Lunch" )

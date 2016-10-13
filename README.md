@@ -59,6 +59,10 @@ accaerralo -w
 ```
 accaerralo -m
 ```
+###### Monthly report week by week
+```
+accaerralo -M
+```
 ###### Include today in reports
 ```
 accaerralo -mw -t
@@ -84,4 +88,10 @@ accaerralo -n PHONE_NUMBER
 
 ```
 accaerralo --in SURNAME
+```
+
+#### Worker totalizators
+
+```
+accaerralo --tot
 ```

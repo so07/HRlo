@@ -3,7 +3,7 @@ import datetime
 import argparse
 
 from .logs.dayutils import day_range as DayRange
-from .logs.dayutils import week_bounds, month_bounds
+from .logs.dayutils import week_bounds, month_bounds, month_weeks_bounds
 
 from . import HRauth
 from . import HRget
@@ -93,6 +93,29 @@ class HRlo(object):
        return self.get(start, end, label="Monthly report")
 
 
+   def month_weeks(self, day = datetime.datetime.today()):
+       """Return a list of HRdayList for month weeks."""
+       _hrdaylist = []
+       # get month bounds
+       month_limits = month_bounds(day)
+       # get today bound
+       after_bound = datetime.datetime.today().date()
+       if self.config.get('today'):
+           # get yesterday as bound
+           after_bound = datetime.datetime.today().date() - datetime.timedelta(days=1)
+       for w in month_weeks_bounds(day):
+           start = w[0]
+           if start > after_bound:
+               break
+           # check if week end are inside current month
+           end = min(w[1], month_limits[1])
+           # check if week end are after today
+           end = min(end, after_bound)
+           # get HRdayList for this week
+           _hrdaylist.append(self.get(start, end))
+       return _hrdaylist
+
+
    def get(self, start, end, label=''):
        """Return HRdayList for a day interval."""
        day_range = DayRange(start, end)
@@ -128,6 +151,11 @@ class HRlo(object):
    def report_month(self, day = datetime.date.today()):
        """Return report from HRdayList class for a month."""
        return str(self.month(day))
+
+
+   def report_month_weeks(self, day = datetime.date.today()):
+       """Return report from HRdayList class for a month."""
+       return "\n".join([ str(w) for w in self.month_weeks(day)])
 
 
    def anomalies(self):
@@ -188,6 +216,10 @@ def main():
                             action='store_true',
                             help='monthly report')
 
+   parser_todo.add_argument('-M', '--week-monthly',
+                            action='store_true',
+                            help='monthly report week by week')
+
    parser_todo.add_argument('-t', '--today',
                             action='store_true',
                             help='keep today in reports')
@@ -247,6 +279,9 @@ def main():
    if args.monthly:
        print(hr.report_month())
 
+   if args.week_monthly:
+       print(hr.report_month_weeks())
+
    if args.phone_name or args.phone_number:
        print(hr.phone(names = args.phone_name, phones = args.phone_number))
 
@@ -256,7 +291,7 @@ def main():
    if args.totalizators or args.get_totalizator:
        print(hr.totalizator(args.get_totalizator))
 
-   if not args.daily and not args.weekly and not args.monthly \
+   if not args.daily and not args.weekly and not args.monthly and not args.week_monthly \
       and not args.from_day \
       and not args.phone_name and not args.phone_number and not args.presence \
       and not args.totalizators and not args.get_totalizator:

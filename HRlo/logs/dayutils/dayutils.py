@@ -130,6 +130,10 @@ def month_bounds(day):
    end   = datetime.date(day.year, day.month, last_day_month)
    return start, end
 
+def month_weeks_bounds(day):
+    w = calendar.Calendar().monthdatescalendar(day.year, day.month)
+    return [ (i[0], i[-1]) for i in w ]
+
 def is_same_month(date1, date2):
    if (date1.year == date2.year) and (date1.month == date2.month) :
       return True

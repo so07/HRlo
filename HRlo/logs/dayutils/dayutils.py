@@ -118,6 +118,8 @@ class day_range:
 
 
 def week_bounds(day):
+   if isinstance(day, datetime.date):
+       day = datetime.datetime.combine(day, datetime.datetime.min.time())
    start = day.date() - datetime.timedelta(days = day.weekday())
    end = start + datetime.timedelta(days = 6)
    return start, end

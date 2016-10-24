@@ -108,6 +108,8 @@ class HRdayList(list):
 
     def week_bounds(self):
         _weeks = []
+        if not self:
+            return _weeks
         d = self[0]['date']
         while (d.date() < week_bounds(self[-1]['date'])[1]):
             _weeks.append(week_bounds(d))

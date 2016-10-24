@@ -100,7 +100,7 @@ class HRlo(object):
        month_limits = month_bounds(day)
        # get today bound
        after_bound = datetime.datetime.today().date()
-       if self.config.get('today'):
+       if not self.config.get('today', True):
            # get yesterday as bound
            after_bound = datetime.datetime.today().date() - datetime.timedelta(days=1)
        for w in month_weeks_bounds(day):

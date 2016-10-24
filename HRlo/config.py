@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 name    = 'HRlo'
-version = '0.7.0'
+version = '0.7.1'
 
 description = 'HR manager'
 long_description = 'HR manager'

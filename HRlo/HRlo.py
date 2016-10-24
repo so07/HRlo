@@ -162,6 +162,22 @@ class HRlo(object):
        return "\n".join([ str(w) for w in self.month_weeks(day)])
 
 
+   def report_keys(self, keys = [], from_day = datetime.date(datetime.date.today().year, 1, 1), to_day = datetime.date.today()):
+       l = self.get(from_day, to_day)
+       t = datetime.timedelta(0)
+       days = []
+       for d in l:
+           for k in keys:
+               _time = d._get_hr_time(k)
+               t += _time
+               if _time:
+                   days.append(d)
+       if self.config.get('verbose'):
+           if days:
+               print(", ".join([str(d['date'].date()) for d in days]))
+       return t
+
+
    def anomalies(self):
        _anomalies = [d for d in self.days if d.anomaly()]
        if _anomalies:
@@ -205,6 +221,9 @@ def main():
                        version='%(prog)s ' + HRconfig.version,
                        help='print version and exit')
 
+   parser.add_argument('-v', '--verbose',
+                       action="count", default=0,
+                       help="increase verbosity")
 
    parser_todo = parser.add_argument_group('report options')
 
@@ -232,6 +251,10 @@ def main():
                             type=int,
                             default=0,
                             help='overtime hours. Remove overtime from timenets. Only supported in weekly and month week by week report. (default %(default)s)')
+
+   parser_todo.add_argument('--report-keys',
+                            nargs='+',
+                            help='report on HR keys. By default report starts from first day of current year until today. Otherwise use --from and --to options to define time range')
 
 
    parser_range = parser.add_argument_group('range days options')
@@ -269,14 +292,14 @@ def main():
    args = parser.parse_args()
 
 
-   config = {'today' : args.today, 'overtime' : args.overtime}
+   config = {'today' : args.today, 'overtime' : args.overtime, 'verbose' : args.verbose}
 
    hr_auth = HRauth.HRauth(**vars(args))
 
    hr = HRlo(hr_auth, config)
 
 
-   if args.from_day and args.to_day:
+   if args.from_day and args.to_day and not args.report_keys:
        print(hr.report(args.from_day, args.to_day))
 
    if args.daily:
@@ -300,10 +323,18 @@ def main():
    if args.totalizators or args.get_totalizator:
        print(hr.totalizator(args.get_totalizator))
 
+   if args.report_keys:
+       if args.from_day and args.to_day:
+           print(hr.report_keys(args.report_keys, args.from_day, args.to_day))
+       elif not args.from_day and args.to_day:
+           print(hr.report_keys(args.report_keys, to_day=args.to_day))
+       else:
+           print(hr.report_keys(args.report_keys))
+
    if not args.daily and not args.weekly and not args.monthly and not args.week_monthly \
       and not args.from_day \
       and not args.phone_name and not args.phone_number and not args.presence \
-      and not args.totalizators and not args.get_totalizator:
+      and not args.totalizators and not args.get_totalizator and not args.report_keys:
       today = hr.report_day()
       if today:
           print("\nToday :")

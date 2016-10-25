@@ -50,6 +50,8 @@ class HRday(DayLog):
         'relative bereavement'               : 'PERMESSO LUTTO AFFINI',
         'bereavement'                        : 'PERMESSO LUTTO E GRAVI MOTIVI',
         'strike'                             : 'SCIOPERO',
+        'employees assembly in office'       : 'ASSEMBLEA PERSONALE IN SEDE',
+        'employees assembly outside office'  : 'ASSEMBLEA PERSONALE FUORI SEDE',
     }
 
     sub_times_to_timenet = ['ko', 'bankhours']
@@ -57,7 +59,8 @@ class HRday(DayLog):
                             'marital leave', 'father discharge', 'marrowletting', 'bloodletting',
                             'disease', 'baby disease > 3 yrs', 'baby disease <= 3 yrs',
                             'optional maternity leave', 'optional maternity leave not paied',
-                            'relative bereavement', 'bereavement', 'strike']
+                            'relative bereavement', 'bereavement', 'strike',
+                            'employees assembly in office', 'employees assembly outside office']
 
     sub_times_to_hr = ['rol', 'dayoff',
                        'marital leave', 'father discharge', 'marrowletting', 'bloodletting',

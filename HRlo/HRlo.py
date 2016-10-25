@@ -174,7 +174,8 @@ class HRlo(object):
                    days.append(d)
        if self.config.get('verbose'):
            if days:
-               print(", ".join([str(d['date'].date()) for d in days]))
+               print("number of days =", len(days))
+               print("days =", ", ".join([str(d['date'].date()) for d in days]))
        return t
 
 

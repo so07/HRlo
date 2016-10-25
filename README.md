@@ -95,3 +95,9 @@ accaerralo --in SURNAME
 ```
 accaerralo --tot
 ```
+
+#### HR keys report
+
+```
+accaerralo --report-keys KEY1 KEY2
+```

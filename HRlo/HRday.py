@@ -399,7 +399,7 @@ class HRday(DayLog):
         """Return VALUE of KEY in DESCRIZIONE1 field of HR data."""
         sep = self.sep_descr
         for k, v in zip(self.HR['DESCRIZIONE1'].split(sep), self.HR['QTA1'].split(sep)):
-            if k.startswith(key):
+            if k.startswith(key.upper()):
             #if key in k:
                return v
 

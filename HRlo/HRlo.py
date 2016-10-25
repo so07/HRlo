@@ -163,6 +163,7 @@ class HRlo(object):
 
 
    def report_keys(self, keys = [], from_day = datetime.date(datetime.date.today().year, 1, 1), to_day = datetime.date.today()):
+       """Return keys report from HR time of HRdayList class for day range."""
        l = self.get(from_day, to_day)
        t = datetime.timedelta(0)
        days = []

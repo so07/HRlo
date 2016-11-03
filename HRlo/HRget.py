@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import datetime
 import calendar
 import argparse
@@ -25,7 +26,12 @@ class HRget(object):
 
         self.session = self.HRauth.session()
         if not debug:
-            self.post = self.HRauth.post()
+            try:
+                self.post = self.HRauth.post()
+            except:
+                print("[HRget] *** ERROR *** connecting to portal")
+                sys.exit(-1)
+
         self.cookies = self.session.cookies
 
         if self.verbose > 1:

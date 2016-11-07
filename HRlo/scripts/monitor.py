@@ -40,23 +40,25 @@ def monitor_daemon(**kwargs):
     log.log("end @ {}".format(config['monitor_end']))
     log.log("frequency in minutes {}".format(config['monitor_freq']))
 
-    while datetime.datetime.now() > datetime.datetime.strptime(config['monitor_start'], time_format) and \
-          datetime.datetime.now() < datetime.datetime.strptime(config['monitor_end'], time_format):
+    while datetime.datetime.now() < datetime.datetime.strptime(config['monitor_end'], time_format):
 
-        log.log("dumping presents")
+        if datetime.datetime.now() > datetime.datetime.strptime(config['monitor_start'], time_format) and \
+           datetime.datetime.now() < datetime.datetime.strptime(config['monitor_end'], time_format):
 
-        try:
-            dump_presents(**config)
-        except Exception as e:
-            log.log("dump_presents ends with ERROR: " + str(e))
+            log.log("dumping presents")
 
-        log.log("getting data")
-        log.log("RESULTS @{}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+            try:
+                dump_presents(**config)
+            except Exception as e:
+                log.log("dump_presents ends with ERROR: " + str(e))
 
-        try:
-            report(datefmt='-', **config)
-        except Exception as e:
-            log.log("report ends with ERROR: " + str(e))
+            log.log("getting data")
+            log.log("RESULTS @{}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+            try:
+                report(datefmt='-', **config)
+            except Exception as e:
+                log.log("report ends with ERROR: " + str(e))
 
         log.log("waiting next pool @ " + str(datetime.datetime.now()+datetime.timedelta(minutes=config['monitor_freq'])))
 

@@ -71,6 +71,11 @@ def add_parser(parser):
 
     _parser_monitor_daemon = parser.add_argument_group('monitor daemon options')
 
+    _parser_monitor_daemon.add_argument('-v', '--verbose',
+                                        action='count',
+                                        default=0,
+                                        help='increase verbosity')
+
     _parser_monitor_daemon.add_argument('--csv-prefix',
                                         default=defaults['csv_prefix'],
                                         help='name prefix for csv file. (default %(default)s)')

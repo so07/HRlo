@@ -55,6 +55,11 @@ def add_parser(parser):
 
     _parser_dump_presents = parser.add_argument_group('presents options')
 
+    _parser_dump_presents.add_argument('-v', '--verbose',
+                                       action='count',
+                                       default=0,
+                                       help='increase verbosity')
+
     _parser_dump_presents.add_argument('--csv-prefix',
                                        default=defaults['csv_prefix'],
                                        help='name prefix for csv file. (default %(default)s)')

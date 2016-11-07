@@ -139,18 +139,25 @@ def report(**kwargs):
            t = refined_total[option][k]
            l = refined_presents[option][k]
            log.log("{:10s} {}".format(k, stats_str(l, t)))
-           #log.log(", ".join([i['name'] for i in l]))
+           if config.get('verbose', 0) > 1:
+               log.log(", ".join([i['name'] for i in l]))
 
     log.log(", ".join(sorted(presents_name)))
 
     for key, value in dmonitor.items():
         log.log("{:20s}: {}".format(key, stats_str(value, list_total)))
-        print(value)
+        if config.get('verbose', 0) > 0:
+            log.log(", ".join(value))
 
 
 def add_parser(parser):
 
     _parser_presents = parser.add_argument_group('get data options')
+
+    _parser_presents.add_argument('-v', '--verbose',
+                                  action='count',
+                                  default=0,
+                                  help='increase verbosity')
 
     _parser_presents.add_argument('--csv-prefix',
                                   default=defaults['csv_prefix'],

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Script for dumping workers presence from HR.
+"""
 import os
 import logging
 import datetime
@@ -8,7 +11,7 @@ from HRlo import HRpresence
 from HRlo import HRauth
 from HRlo import HRget
 
-from scripts_utils import logit
+from .scripts_utils import logit
 
 defaults = {
     'log_file'   : None,
@@ -69,7 +72,7 @@ def add_parser(parser):
 def main():
 
     parser = argparse.ArgumentParser(prog='dump presents',
-                                     description='dump all presents to file.',
+                                     description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)

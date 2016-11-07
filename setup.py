@@ -20,12 +20,12 @@ setup(
    url=config.url,
    download_url=config.url,
    requires=['requests'],
-   packages=['HRlo', 'HRlo/logs', 'HRlo/logs/dayutils'],
+   packages=['HRlo', 'HRlo/logs', 'HRlo/logs/dayutils', 'HRlo/scripts'],
    scripts=['bin/accaerralo', 'bin/HRlo',
             'bin/HRday', 'bin/HRget',
             'bin/HRpresence', 'bin/HRcompany',
             'bin/HRtotalizator', 'bin/HRphone',
-            'bin/HRutils', 'bin/HRauth'],
+            'bin/HRutils', 'bin/HRauth', 'bin/HRscripts'],
    cmdclass={'build_py': build_py},
 
    classifiers=[

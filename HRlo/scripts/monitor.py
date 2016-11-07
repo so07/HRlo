@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
+"""
+Script for HR monitoring.
+"""
 import time
 import logging
 import argparse
 import datetime
 
-from dump_presents import dump_presents
-from report import report
-from scripts_utils import logit
-from dump_presents import defaults as dump_presents_defaults
-from report import defaults as report_defaults
+from .dump_presents import dump_presents
+from .report import report
+from .scripts_utils import logit
+from .dump_presents import defaults as dump_presents_defaults
+from .report import defaults as report_defaults
 
 time_format = '%Y-%m-%d/%H:%M'
 
@@ -100,8 +103,8 @@ def add_parser(parser):
 
 def main():
 
-    parser = argparse.ArgumentParser(prog='',
-                                     description='',
+    parser = argparse.ArgumentParser(prog='HR monitor',
+                                     description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)

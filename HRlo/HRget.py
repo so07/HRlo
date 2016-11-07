@@ -29,7 +29,7 @@ class HRget(object):
             try:
                 self.post = self.HRauth.post()
             except:
-                print("[HRget] *** ERROR *** connecting to portal")
+                raise ConnectionError("[HRget] *** ERROR *** connecting to portal")
                 sys.exit(-1)
 
         self.cookies = self.session.cookies

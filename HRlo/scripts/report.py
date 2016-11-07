@@ -46,6 +46,16 @@ def exclude(l, config=None):
     return l
 
 
+def remove(l, config=None):
+    # get dict with key and list of values
+    remove = get_values_from_config(config, 'remove')
+    # remove workers with key==value from list
+    for key, values in remove.items():
+        for v in values:
+            l = [ w for w in l if v not in w[key] ]
+    return l
+
+
 def monitor(l, m, config=None):
     for key, values in get_values_from_config(config, 'monitor').items():
         for v in values:
@@ -114,7 +124,7 @@ def report(**kwargs):
 
         p = HRpresence.HRpresence(dcsv)
 
-        list_total = exclude(p.presence, config.get('config_file'))
+        list_total = remove(p.presence, config.get('config_file'))
 
         _presents = [ w for w in p.presence if w.is_present() if w['name'] not in allowed ]
 

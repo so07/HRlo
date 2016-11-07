@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import datetime
 import calendar
 import argparse
@@ -25,7 +26,12 @@ class HRget(object):
 
         self.session = self.HRauth.session()
         if not debug:
-            self.post = self.HRauth.post()
+            try:
+                self.post = self.HRauth.post()
+            except:
+                raise ConnectionError("[HRget] *** ERROR *** connecting to portal")
+                sys.exit(-1)
+
         self.cookies = self.session.cookies
 
         if self.verbose > 1:
@@ -274,6 +280,45 @@ class HRget(object):
 #}}}
 
 
+    def presence_single(self, name):
+
+        headers = {}
+        params = {
+                  'rows'      : '15',
+                  'startrow'  : '0',
+                  'count'     : 'true',
+                  'cmdhash'   : '3ff43ef92f5f9df7f54c554adae919a3',
+                  'sqlcmd'    : 'core_qzoomgen',
+                  'queryfilter' :"DSVALUE like '{}%'".format(name.upper()),
+                  'ANTABLEZOOM':"hrdd_employee00",
+                  'ANIDFIELD':"IDEMPLOY",
+                  'ANDSFIELD':"ANSURNAM",
+                  'ANDSFIELD2':"ANNAME",
+                  'IDFILTER':"",
+                  'ANQUERYFILTER':"1",
+                 }
+
+        p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
+
+        try:
+            d = p.json()['Data'][:-1]
+        except:
+            return
+
+        try:
+            w_id = d[-1][0]
+        except:
+            return
+
+        p = self.session.get(
+'https://hr.cineca.it/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D{}%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'.format(w_id)
+)
+
+        csv_data = p.text
+
+        return {'csv_data' : csv_data}
+
+
     def presence(self):
 
         p = self.session.get(self.presence_url)
@@ -339,6 +384,10 @@ def main ():
                         action='store_true',
                         help="get presence of worker")
 
+    parser.add_argument('--presence-single',
+                        dest='presence_single',
+                        help="get presence of worker")
+
     parser.add_argument('--dump',
                         dest='file_out',
                         help="dump to file")
@@ -398,6 +447,14 @@ def main ():
     if args.presence:
 
         djson = hr_get.presence()
+
+        if args.verbose:
+            print(djson)
+
+
+    if args.presence_single:
+
+        djson = hr_get.presence_single(args.presence_single)
 
         if args.verbose:
             print(djson)

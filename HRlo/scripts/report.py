@@ -128,6 +128,7 @@ def report(**kwargs):
 
         _presents = [ w for w in p.presence if w.is_present() if w['name'] not in allowed ]
 
+        _presents = remove(_presents, config.get('config_file'))
         _presents = exclude(_presents, config.get('config_file'))
 
         for w in _presents:

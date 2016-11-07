@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Script for report from HR presence.
+"""
 import os
 import re
 import glob
@@ -8,8 +11,8 @@ from collections import OrderedDict
 
 from HRlo import HRpresence
 
-from scripts_utils import logit
-from dump_presents import defaults as dump_presents_defaults
+from .scripts_utils import logit
+from .dump_presents import defaults as dump_presents_defaults
 
 
 defaults = {
@@ -168,8 +171,8 @@ def add_parser(parser):
 
 def main():
 
-    parser = argparse.ArgumentParser(prog='',
-                                     description='',
+    parser = argparse.ArgumentParser(prog='HR report',
+                                     description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     add_parser(parser)

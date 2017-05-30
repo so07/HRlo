@@ -337,33 +337,31 @@ class HRday(DayLog):
        return time_sec
 
 
-    def _check_hr_work_time(self, type_, time_):
+    def _check_hr_work_time(self):
         """Check HR work time in DESCRORARIO key."""
 
         if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
             raise Exception("[HRday] ***ERROR***\nWorker not employed in date {}".format(self.date().date()))
 
-        if not utils.is_number(time_[0]) or not utils.is_number(time_[1]):
-            raise Exception("[HRday] ***ERROR***\nHR Time not well defined on date {}".format(self.date().date()))
-
 
     def _get_hr_work_time(self):
        """Return working time for HR in seconds.
-          Get data from DESCRORARIO key.
+          Get data from ORARIOTEO key.
           If day is holiday return 0.
        """
-       # read from DESCRORARIO to get working time for HR
        if self.holiday():
-          _time_sec = 0
-       else:
-          _time_info = self.HR['DESCRORARIO'].split()
-          _time_type = _time_info[0]
-          _time_time = _time_info[1].split(':')
-          self._check_hr_work_time(_time_type, _time_time)
-          _time_delta = datetime.timedelta( hours=int(_time_time[0]), minutes=int(_time_time[1]) )
-          # convert to seconds
-          _time_sec  = _time_delta.total_seconds()
-       return _time_sec
+          return 0
+
+       self._check_hr_work_time()
+
+       _start = '0000'
+       _end   = '0000'
+       if self.HR['ORARIOTEO'].split(' - '):
+          _start, _end = self.HR['ORARIOTEO'].split(' - ')
+       _start = datetime.timedelta(hours=int(_start[0:2]), minutes=int(_start[2:4]))
+       _end   = datetime.timedelta(hours=int(_end[0:2]), minutes=int(_end[2:4]))
+       _time_delta = _end - _start
+       return _time_delta.total_seconds() # convert to seconds
 
 
     def _get_hr_real_work_time(self):

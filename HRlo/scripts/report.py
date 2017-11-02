@@ -93,7 +93,10 @@ def allowed_list(config=None):
 
 
 def stats_str(l, tot):
-    return "{:3d} / {:3d} = {:.1f}%".format(len(l), len(tot), 100.0*len(l)/len(tot))
+    _percentage = 0.0
+    if len(tot):
+        _percentage = 100.0*len(l)/len(tot)
+    return "{:3d} / {:3d} = {:.1f}%".format(len(l), len(tot), _percentage)
 
 
 def report(**kwargs):
@@ -126,7 +129,7 @@ def report(**kwargs):
 
         list_total = remove(p.presence, config.get('config_file'))
 
-        _presents = [ w for w in p.presence if w.is_present() if w['name'] not in allowed ]
+        _presents = [ w for w in p.presence if w.is_present() or w.is_teleworking() if w['name'] not in allowed ]
 
         _presents = remove(_presents, config.get('config_file'))
         _presents = exclude(_presents, config.get('config_file'))

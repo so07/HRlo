@@ -66,6 +66,9 @@ class presence (HashedDict):
     def is_present(self):
         return 'PRESENTE' in self['status']
 
+    def is_teleworking(self):
+        return 'TELELAVORO' in self['proof']
+
     def is_at(self, city):
         pass
 

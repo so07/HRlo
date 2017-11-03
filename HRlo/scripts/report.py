@@ -36,6 +36,47 @@ def get_values_from_config(config_file, section):
     return d
 
 
+def get_list_from_file(list_files):
+    l = []
+    for f in list_files:
+        if os.path.isfile(f):
+            with open(f, 'r') as fp:
+                name_list = fp.readlines()
+            l.extend([ n.strip() for n in name_list if '#' not in n ])
+    return l
+
+
+def include(l, config=None):
+    # get dict with key and list of values
+    dinc = get_values_from_config(config, 'include')
+
+    # read list from file
+    ls_file = []
+    if dinc.get('file'):
+        for n in get_list_from_file(dinc['file']):
+            list_in = [ w for w in l if w.is_like('name', "^" + n) ]
+            if any(list_in):
+                worker = list_in[0]
+                if not any([ True for w in ls_file if worker['name'] == w['name'] ]):
+                    ls_file.append(worker)
+    else:
+        ls_file = l
+
+    # include workers with key==value from list
+    ls = []
+    for key, values in dinc.items():
+        if (key=='file'):
+            continue
+        for v in values:
+            for worker in [ w for w in ls_file if v in w[key] ]:
+                if not any([ True for w in ls if worker['name'] == w['name'] ]):
+                    ls.append(worker)
+    else:
+        ls = ls_file
+
+    return ls
+
+
 def exclude(l, config=None):
     # get dict with key and list of values
     exclude = get_values_from_config(config, 'exclude')
@@ -127,11 +168,14 @@ def report(**kwargs):
 
         p = HRpresence.HRpresence(dcsv)
 
-        list_total = remove(p.presence, config.get('config_file'))
+        # total worker list used for percentage
+        list_total = p.presence
+        list_total = remove(list_total, config.get('config_file'))
+        list_total = include(list_total, config.get('config_file'))
 
         _presents = [ w for w in p.presence if w.is_present() or w.is_teleworking() if w['name'] not in allowed ]
-
         _presents = remove(_presents, config.get('config_file'))
+        _presents = include(_presents, config.get('config_file'))
         _presents = exclude(_presents, config.get('config_file'))
 
         for w in _presents:

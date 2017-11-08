@@ -2,6 +2,7 @@
 import re
 import datetime
 import argparse
+from itertools import izip
 
 from .logs import dayutils
 
@@ -354,13 +355,12 @@ class HRday(DayLog):
 
        self._check_hr_work_time()
 
-       _start = '0000'
-       _end   = '0000'
-       if self.HR['ORARIOTEO'].split(' - '):
-          _start, _end = self.HR['ORARIOTEO'].split(' - ')
-       _start = datetime.timedelta(hours=int(_start[0:2]), minutes=int(_start[2:4]))
-       _end   = datetime.timedelta(hours=int(_end[0:2]), minutes=int(_end[2:4]))
-       _time_delta = _end - _start
+       _time_delta = datetime.timedelta(0)
+       for i, j in izip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
+           _start = datetime.timedelta(hours=int(i[0:2]), minutes=int(i[2:4]))
+           _end   = datetime.timedelta(hours=int(j[0:2]), minutes=int(j[2:4]))
+           _time_delta = _time_delta + (_end - _start)
+
        return _time_delta.total_seconds() # convert to seconds
 
 

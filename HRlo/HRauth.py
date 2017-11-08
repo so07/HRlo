@@ -39,6 +39,9 @@ class HRauth(dict):
 
       self._session = requests.Session()
 
+      # check login to HR
+      self.login()
+
       if self['save']:
           if self.login():
               self._write_config_file(self['config_file'])

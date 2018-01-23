@@ -2,7 +2,6 @@
 import re
 import datetime
 import argparse
-from itertools import izip
 
 from .logs import dayutils
 
@@ -356,7 +355,7 @@ class HRday(DayLog):
        self._check_hr_work_time()
 
        _time_delta = datetime.timedelta(0)
-       for i, j in izip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
+       for i, j in zip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
            _start = datetime.timedelta(hours=int(i[0:2]), minutes=int(i[2:4]))
            _end   = datetime.timedelta(hours=int(j[0:2]), minutes=int(j[2:4]))
            _time_delta = _time_delta + (_end - _start)

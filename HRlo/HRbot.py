@@ -143,24 +143,24 @@ def exit(bot, update):
     msg = "Today {} Exits:\n".format(hr_today.date().date())
     lunch = True
     least = False
-    msg += "Standard time   [{}]\n  Exit  @ {}\n  Remains  {}\n".format(
+    msg += "Standard time   [{}]\n  Exit   @ {}\n  Remains  {}\n".format(
             hr_today.HR_workday,
             str(hr_today.exit(lunch=lunch, least=least).strftime("%H:%M")),
-            str(hr_today.remains(lunch=lunch, least=least)),
+            utils.to_str(hr_today.remains(lunch=lunch, least=least)),
             )
     lunch = True
     least = True
-    msg += "At Least lunch  [{}]\n  Exit  @ {}\n  Remains  {}\n".format(
+    msg += "At Least lunch  [{}]\n  Exit   @ {}\n  Remains  {}\n".format(
             hr_today.HR_workday_least_with_lunch,
             str(hr_today.exit(lunch=lunch, least=least).strftime("%H:%M")),
-            str(hr_today.remains(lunch=lunch, least=least)),
+            utils.to_str(hr_today.remains(lunch=lunch, least=least)),
             )
     lunch = False
     least = True
-    msg += "At Least work   [{}]\n  Exit  @ {}\n  Remains  {}\n".format(
+    msg += "At Least work   [{}]\n  Exit   @ {}\n  Remains  {}\n".format(
             hr_today.HR_workday_least,
             str(hr_today.exit(lunch=lunch, least=least).strftime("%H:%M")),
-            str(hr_today.remains(lunch=lunch, least=least)),
+            utils.to_str(hr_today.remains(lunch=lunch, least=least)),
             )
     bot_print(bot, update, msg)
 

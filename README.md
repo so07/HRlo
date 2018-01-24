@@ -95,3 +95,93 @@ accaerralo --in SURNAME
 ```
 accaerralo --tot
 ```
+
+
+
+## `HRlo` Telegram bot, aka `HRbot`
+
+This wiki is about how to create and run a `HRlo` bot in [Telegram](https://telegram.org/)
+
+### Create a Telegram bot
+
+Talk to [@BotFather](https://telegram.me/botfather) and type `/newbot` for a new bot and follow the instructions
+```
+you:
+/newbot
+
+BotFather:
+Alright, a new bot. How are we going to call it? Please choose a name for your bot.
+
+you:
+HRlo
+
+BotFather:
+Good. Now let's choose a username for your bot. It must end in `bot`. Like this, for example: TetrisBot or tetris_bot.
+
+you:
+HRlo_bot
+
+BotFather:
+....
+
+Use this token to access the HTTP API:
+TOKEN
+```
+Save the TOKEN and paste it in the token key of HRbot section in the HRlo configuration file
+```
+$ vi ~/.HRlo
+```
+
+```
+[HRauth]
+...
+[HRbot]
+token = TOKEN
+```
+
+### Run `HRbot`
+
+Launch `HRbot` executable on a server with a working installation of `HRlo`
+```
+$ HRbot
+```
+Open Telegram App or go to [Telegram Web](https://web.telegram.org) in a browser and start talk with `HRlo` bot.
+
+### Talk with `HRbot`
+
+List of simple commands to run in telegram bot.
+
+help of commands
+```
+/help
+```
+ launch simple inline button interface
+```
+/hrlo
+```
+ estimated exit times report
+ ```
+ /exit
+ ```
+ today times report
+ ```
+ /time
+ ```
+ today time stamps report
+ ```
+ /stamp
+ ```
+ check status of worker
+ ```
+ /in name [name ...]
+ ```
+ get worker's phone number
+ ```
+ /phone name [name ...]
+ ```
+ get worker's name from a phone number
+ ```
+ /name 12345 [12345 ...]
+ ```
+
+

@@ -25,9 +25,6 @@ def get_today():
    hr_today = HRday.HRday(json)
    return hr_today
 
-def get_hrlo():
-    return HRlo.HRlo(hr_auth)
-
 config_file = HRauth.HRauth_default['config_file']
 token = get_token(config_file)
 
@@ -38,6 +35,10 @@ hr_auth  = HRauth.HRauth()
 hr_get   = HRget.HRget(hr_auth)
 hr_phone = HRphone.HRphone(hr_get.phone())
 hr_today = get_today()
+
+def get_hrlo():
+    hr_auth.login()
+    return HRlo.HRlo(hr_auth)
 
 def _message_format(msg):
     return re.sub(r"[.\.]+", "\n", msg)
@@ -227,6 +228,9 @@ def help(bot, update):
    get phone number from worker name
 /name 12345 [12345 ...]
    get worker name from phone number
+
+/login
+   check login to HR
 
 /restart
    restart HRbot

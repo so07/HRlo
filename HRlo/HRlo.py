@@ -5,6 +5,8 @@ import argparse
 from .logs.dayutils import day_range as DayRange
 from .logs.dayutils import week_bounds, month_bounds, month_weeks_bounds
 
+from dateutil.rrule import rrule, MONTHLY
+
 from . import HRauth
 from . import HRget
 from . import HRday
@@ -16,6 +18,7 @@ from . import HRtotalizator
 from . import color
 from . import config as HRconfig
 
+from .utils import to_str
 
 class HRlo(object):
 
@@ -116,6 +119,36 @@ class HRlo(object):
        return _hrdaylist
 
 
+   def range_weeks(self, start_day = datetime.datetime.today(), end_day = datetime.datetime.today()):
+       """Return a list of HRdayList for range weeks."""
+       _hrdaylist = []
+       # get month bounds
+       if start_day is None:
+           start_day = datetime.datetime.today()
+       start_limits = month_bounds(start_day)
+       end_limits = month_bounds(end_day)
+       limits = (start_limits[0], end_limits[1])
+       months_start_day = [dt for dt in rrule(MONTHLY, dtstart=limits[0], until=limits[1])]
+
+       # get today bound
+       after_bound = datetime.datetime.today().date()
+       if not self.config.get('today', True):
+           # get yesterday as bound
+           after_bound = datetime.datetime.today().date() - datetime.timedelta(days=1)
+
+       for month in months_start_day:
+           for w in month_weeks_bounds(month):
+               start = w[0]
+               if start > after_bound:
+                   break
+               # check if week end are after today
+               end = min(w[1], after_bound)
+               # get HRdayList for this week
+               _hrdaylist.append(self.get(start, end, overtime=self.config.get('overtime', 0)))
+
+       return _hrdaylist
+
+
    def get(self, start, end, label='', overtime=0):
        """Return HRdayList for a day interval."""
        day_range = DayRange(start, end)
@@ -160,6 +193,24 @@ class HRlo(object):
    def report_month_weeks(self, day = datetime.date.today()):
        """Return report from HRdayList class for a month."""
        return "\n".join([ str(w) for w in self.month_weeks(day)])
+
+
+   def report_range_weeks(self, start_day = datetime.date.today(), end_day = datetime.date.today()):
+       """Return report from HRdayList class for a range in weeks."""
+       return "\n".join([ str(w) for w in self.range_weeks(start_day, end_day)])
+
+
+   def report_hours_weeks(self, start_day = datetime.date.today(), end_day = datetime.date.today()):
+       """Return report from HRdayList class for a range in weeks."""
+       timenet_sum = 0
+       s = ""
+       list_day = self.range_weeks(start_day, end_day)
+       for i in list_day:
+           s += "{:.<25} {} / {}\n".format("Week", str(i[0].day().date()), str(i[-1].day().date()))
+           s += "{:.<25} {}\n\n".format("Timenet", to_str(i.timenet()))
+           timenet_sum += i.timenet()
+       s += "{:.<25} {}".format("Total Timenet", to_str(timenet_sum))
+       return s
 
 
    def report_keys(self, keys = [], from_day = datetime.date(datetime.date.today().year, 1, 1), to_day = datetime.date.today()):
@@ -245,6 +296,14 @@ def main():
                             action='store_true',
                             help='monthly report week by week')
 
+   parser_todo.add_argument('-W', '--week-range',
+                            action='store_true',
+                            help='range report week by week')
+
+   parser_todo.add_argument('-H', '--week-hours',
+                            action='store_true',
+                            help='week hours report week by week')
+
    parser_todo.add_argument('-t', '--today',
                             action='store_true',
                             help='keep today in reports')
@@ -301,7 +360,10 @@ def main():
    hr = HRlo(hr_auth, config)
 
 
-   if args.from_day and args.to_day and not args.report_keys:
+   if args.from_day and args.to_day \
+      and not args.report_keys \
+      and not args.week_range \
+      and not args.week_hours:
        print(hr.report(args.from_day, args.to_day))
 
    if args.daily:
@@ -315,6 +377,12 @@ def main():
 
    if args.week_monthly:
        print(hr.report_month_weeks())
+
+   if args.week_range:
+       print(hr.report_range_weeks(args.from_day, args.to_day))
+
+   if args.week_hours:
+       print(hr.report_hours_weeks(args.from_day, args.to_day))
 
    if args.phone_name or args.phone_number:
        print(hr.phone(names = args.phone_name, phones = args.phone_number))
@@ -334,7 +402,7 @@ def main():
            print(hr.report_keys(args.report_keys))
 
    if not args.daily and not args.weekly and not args.monthly and not args.week_monthly \
-      and not args.from_day \
+      and not args.from_day and not args.week_range and not args.week_hours \
       and not args.phone_name and not args.phone_number and not args.presence \
       and not args.totalizators and not args.get_totalizator and not args.report_keys:
       today = hr.report_day()

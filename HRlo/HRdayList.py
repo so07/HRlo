@@ -179,8 +179,10 @@ class HRdayList(list):
             return self._get_list_attr('timenet')
         else:
             tnet = sum(self.timenet(list=True))
-            if self.config.get('overtime'):
-                tnet -= timedelta(hours=self.config['overtime']).total_seconds()
+            for i in range(self.config.get('overtime', 0)):
+                if tnet >= timedelta(hours=1).total_seconds():
+                    tnet -= timedelta(hours=1).total_seconds()
+                #tnet -= timedelta(hours=self.config['overtime']).total_seconds()
             return tnet
 
     def timenet_weeks(self, list=False):

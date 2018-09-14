@@ -17,7 +17,7 @@ class HRday(DayLog):
     re_logs = re.compile('(\d+)-')
 
     HR_workday                  = datetime.timedelta(hours= 7, minutes=12)
-    HR_workday_least            = datetime.timedelta(hours= 5, minutes= 0)
+    HR_workday_least            = datetime.timedelta(hours= 6, minutes= 0)
     HR_workday_least_with_lunch = datetime.timedelta(hours= 6, minutes= 0)
 
     HR_login_last   = datetime.timedelta(hours=10, minutes= 0)
@@ -246,12 +246,12 @@ class HRday(DayLog):
           s += "{}\n".format( utils.to_str(self.remains(lunch=True, least=False)) )
           s += "{:.<25}".format( "Estimated exit" )
           s += "{}\n".format( str(self.exit(lunch=True, least=False).strftime("%H:%M")) )
-          # at least with lunch
-          s += "{:.<25}{}\n".format( "At least with lunch time", utils.to_str(self.HR_workday_least_with_lunch) )
-          s += "{:.<25}".format( "Remains" )
-          s += "{}\n".format( utils.to_str(self.remains(lunch=True, least=True)) )
-          s += "{:.<25}".format( "Estimated exit" )
-          s += "{}\n".format( str(self.exit(lunch=True, least=True).strftime("%H:%M")) )
+          ###DEPRECATED # at least with lunch
+          ###DEPRECATED s += "{:.<25}{}\n".format( "At least with lunch time", utils.to_str(self.HR_workday_least_with_lunch) )
+          ###DEPRECATED s += "{:.<25}".format( "Remains" )
+          ###DEPRECATED s += "{}\n".format( utils.to_str(self.remains(lunch=True, least=True)) )
+          ###DEPRECATED s += "{:.<25}".format( "Estimated exit" )
+          ###DEPRECATED s += "{}\n".format( str(self.exit(lunch=True, least=True).strftime("%H:%M")) )
           # at least
           s += "{:.<25}{}\n".format( "At least working time", utils.to_str(self.HR_workday_least) )
           s += "{:.<25}".format( "Remains" )

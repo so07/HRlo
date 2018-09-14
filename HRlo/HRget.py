@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import sys
 import datetime
 import calendar
@@ -22,6 +23,7 @@ class HRget(object):
         self.sheet_url    = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
         self.post_url     = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/SQLDataProviderServer'
         self.portal_url   = 'https://' + self.HRauth.host() + '/HRPortal/servlet/SQLDataProviderServer'
+        self.hash_url     = 'https://' + self.HRauth.host() + '/HRPortal/jsp/gsmd_one_column_model.jsp'
         self.presence_url = 'https://' + self.HRauth.host() + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
 
         self.session = self.HRauth.session()
@@ -213,10 +215,20 @@ class HRget(object):
                   'rows'      : '2000',
                   'startrow'  : '0',
                   'count'     : 'true',
-                  'cmdhash'   : 'b55cc94f7a3a372690c14949975ac422',
+                  'cmdhash'   : '870a49c3706613d8026d2b84cd14150b',
                   'sqlcmd'    : 'q_rubrica',
                   'pANSURNAM' : '',
                  }
+
+        p = self.session.post(self.hash_url, headers=headers, cookies=self.cookies, params=None)
+
+        matches = re.findall("(?<='q_rubrica',).*", p.text)
+
+        t = re.findall("(?:\')(\w+)(?:\')", matches[0])
+
+        token = t[5]
+
+        params['cmdhash'] = token
 
         p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
 
@@ -438,10 +450,7 @@ def main ():
 
         if args.verbose:
             for d in djson['Data']:
-                print("---+")
-                for k, v in zip(djson['Fields'], d):
-                    print(v)
-                print("+---")
+                print(" ".join(d))
 
 
     if args.presence:

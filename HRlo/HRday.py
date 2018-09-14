@@ -346,7 +346,7 @@ class HRday(DayLog):
 
     def _get_hr_work_time(self):
        """Return working time for HR in seconds.
-          Get data from ORARIOTEO key.
+          Get data from ORARIOTEO key. If ORARIOTEO is empty try to get from DESCRORARIO.
           If day is holiday return 0.
        """
        if self.holiday():
@@ -355,10 +355,19 @@ class HRday(DayLog):
        self._check_hr_work_time()
 
        _time_delta = datetime.timedelta(0)
-       for i, j in zip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
-           _start = datetime.timedelta(hours=int(i[0:2]), minutes=int(i[2:4]))
-           _end   = datetime.timedelta(hours=int(j[0:2]), minutes=int(j[2:4]))
-           _time_delta = _time_delta + (_end - _start)
+
+       if self.HR['ORARIOTEO']:
+           for i, j in zip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
+               _start = datetime.timedelta(hours=int(i[0:2]), minutes=int(i[2:4]))
+               _end   = datetime.timedelta(hours=int(j[0:2]), minutes=int(j[2:4]))
+               _time_delta = _time_delta + (_end - _start)
+       else:
+           for i in self.HR['DESCRORARIO'].split():
+               try:
+                   hm = i.split(':')
+                   _time_delta = datetime.timedelta(hours=int(hm[0]), minutes=int(hm[1]))
+               except:
+                   pass
 
        return _time_delta.total_seconds() # convert to seconds
 

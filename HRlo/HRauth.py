@@ -145,9 +145,62 @@ class HRauth(dict):
        return self._session
 
    def post(self):
-       auth = {'m_cUserName' : self['username'], 'm_cPassword' : self._decode(self['password']), 'm_cAction' : 'login'}
-       return self.session().post(self.login_url(), params=auth, allow_redirects=False)
-
+       p = self.session().get(self.login_url())
+       cookies = self.session().cookies.get_dict()
+       cookies = "; ".join([ "{}={}".format(k, cookies[k]) for k in cookies.keys()])
+       headers = {
+           'Accept'                    : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+           'Accept-Encoding'           : 'gzip, deflate, br',
+           'Accept-Language'           : 'en-US,en;q=0.9',
+           'Cache-Control'             : 'no-cache',
+           'Connection'                : 'keep-alive',
+           'Content-Type'              : 'application/x-www-form-urlencoded',
+           'Cookie'                    : cookies,
+           'Host'                      : self.host(),
+           'Origin'                    : 'https://{}'.format(self.host()),
+           'Pragma'                    : 'no-cache',
+           'Referer'                   : 'https://{}/HRPortal/jsp/login.jsp'.format(self.host()),#?cpccchk=0.14902908704579954',
+           'Upgrade-Insecure-Requests' : '1',
+##           'User-Agent'                : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36',
+       }
+       auth = {
+           'm_cUserName' : self['username'],
+           'm_cPassword' : self._decode(self['password']),
+           'm_cAction' : 'login',
+           'w_Modal':'N',
+           'wSHOWSENDMYPWD':'true',
+           'mylink':'C',
+           'm_cFailedLoginReason':'',
+           'ssotrust':'',
+           'GWINLOGON':'',
+           'g_codute':'0.0',
+           'm_cURL':'',
+           'm_cURLOnError':'jsp/login.jsp',
+           'error':'0',
+           'm_cForceLogin':'',
+           'w_FirstCodAzi':'000001',
+           'g_UserCode':'-1',
+           'g_UserName':'',
+           'ssoStatus':'0',
+           'm_cInstance':'',
+           'm_cCaptcha':'',
+           'g_codazi':'000001',
+           'Nodes':'t',
+           'memo':'',
+           'TITOLO':'f',
+           'GLOGOLGINURL':'../loghi/CIS.png',
+           'ERM_GANVERATT':'070800',
+           'mylang':'',
+           'browserlang':'',
+           'GLOGOLOGIN':'',
+           'g_UserLang':'',
+           'GLANGUAGEINSTALL':';DEU|deutsch|../images/flag/Germany.png;ENG|English|../images/flag/UnitedKingdom.png;FRA|francais|../images/flag/France.png;ITA|Italiano|../images/flag/Italy.png;POR|portuguese|../images/flag/Portugal.png;RON|romanian|../images/flag/default.png;SPA|espanol|../images/flag/Spain.png',
+           'GFLSENDMYPWD':'S',
+           'GERMNAME':'HRPortal',
+           'GLOGINTITLECO':'',
+           'GIDLANGUAGE':'ITA',
+       }
+       return self.session().post(self.login_url(), data=auth, allow_redirects=False, headers=headers)
 
 
 def add_parser(parser):

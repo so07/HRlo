@@ -21,58 +21,41 @@ class HRget(object):
 
         # set URLs
         self.sheet_url    = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/hfpr_bcapcarte'
+        self.sheet_url    = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/hfpr_fcartellino_day'
         self.post_url     = 'https://' + self.HRauth.host() + '/HR-WorkFlow/servlet/SQLDataProviderServer'
         self.portal_url   = 'https://' + self.HRauth.host() + '/HRPortal/servlet/SQLDataProviderServer'
         self.hash_url     = 'https://' + self.HRauth.host() + '/HRPortal/jsp/gsmd_one_column_model.jsp'
         self.presence_url = 'https://' + self.HRauth.host() + '/HRPortal/servlet/Report?ReportName=AAA_ElencoPresenti&m_cWv=Rows%3D0%0A0%5Cu0023m_cMode%3Dhyperlink%0A0%5Cu0023outputFormat%3DCSV%0A0%5Cu0023pageFormat%3DA4%0A0%5Cu0023rotation%3DLANDSCAPE%0A0%5Cu0023marginTop%3D7%0A0%5Cu0023marginBottom%3D7%0A0%5Cu0023marginLeft%3D7%0A0%5Cu0023hideOptionPanel%3DT%0A0%5Cu0023showAfterCreate%3DTrue%0A0%5Cu0023mode%3DDOWNLOAD%0A0%5Cu0023ANQUERYFILTER%3D1%0A0%5Cu0023pRAPPORTO%3D%0A0%5Cu0023pFILIALE%3D%0A0%5Cu0023pUFFICIO%3D%0A0%5Cu0023m_cParameterSequence%3Dm_cMode%2CoutputFormat%2CpageFormat%2Crotation%2CmarginTop%2CmarginBottom%2CmarginLeft%2Cmode%2ChideOptionPanel%2CshowAfterCreate%2CANQUERYFILTER%2CpRAPPORTO%2CpFILIALE%2CpUFFICIO%0A'
 
-        self.session = self.HRauth.session()
-        if not debug:
-            try:
-                self.post = self.HRauth.post()
-            except:
-                raise ConnectionError("[HRget] *** ERROR *** connecting to portal")
-                sys.exit(-1)
+        ##self.session = self.HRauth.session()
+        ##if not debug:
+        ##    try:
+        ##        self.post = self.HRauth.post()
+        ##    except:
+        ##        raise ConnectionError("[HRget] *** ERROR *** connecting to portal")
+        ##        sys.exit(-1)
 
-        self.cookies = self.session.cookies
+        ##self.cookies = self.session.cookies
 
-        if self.verbose > 1:
-           print (">>>USERNAME>>>", self.HRauth.username())
-           print (">>>IDEMPLOY>>>", self.HRauth.idemploy())
-           #print ("[{}]@{}".format(__class__.__name__, sys._getframe().f_code.co_name))
-           print (">>>CODE>>>", self.post.status_code)
-           print (">>>HISTORY>>>", self.post.history)
-           print (">>>HEADERS>>>", self.post.headers)
-           print (">>>COOKIES>>>", self.post.cookies)
-           print (">>>LOCATION>>>", self.post.headers['location'])
-           #print (">>>PAGE>>>", self.post.text)
+        ### if self.verbose > 1:
+        ###    print (">>>USERNAME>>>", self.HRauth.username())
+        ###    print (">>>IDEMPLOY>>>", self.HRauth.idemploy())
+        ###    #print ("[{}]@{}".format(__class__.__name__, sys._getframe().f_code.co_name))
+        ###    print (">>>CODE>>>", self.post.status_code)
+        ###    print (">>>HISTORY>>>", self.post.history)
+        ###    print (">>>HEADERS>>>", self.post.headers)
+        ###    print (">>>COOKIES>>>", self.post.cookies)
+        ###    print (">>>LOCATION>>>", self.post.headers['location'])
+        ###    #print (">>>PAGE>>>", self.post.text)
 
 
     def get_range(self, day_range):
+
        data = []
-       # loop over months of day_range
-       for y, m in day_range.months():
+       for d in day_range:
+           data.append(self.get(d.year, d.month, d.day))
 
-          # get month data from HR
-          full_month = self.get(y, m)
-
-          # get first and last days for month
-          first, last = dayutils.month_bounds( datetime.date(y, m, 1) )
-          # to avoid future day: if same month of today's month set last day to today
-          if dayutils.is_same_month( datetime.datetime(y, m, 1), datetime.datetime.today() ):
-             last = datetime.datetime.today().date()
-          # list of month days within day_range
-          l = [ i.day for i in dayutils.day_range(first, last) if i in day_range ]
-          # extract days within day_range from data of all month
-          old_data = full_month['Data']
-          data += [ old_data[i-1] for i in l ]
-
-          # save fields
-          fields = full_month['Fields']
-
-       if data:
-         jret = {'Fields' : fields, 'Data' : data}
-         return jret
+       return data
 
 
     def _check_data(self, d, year, month, day):
@@ -100,79 +83,68 @@ class HRget(object):
         if dayutils.is_same_month( datetime.datetime(year, month, 1), datetime.datetime.today() ):
            last_day = datetime.datetime.today().day
 
-        if self.verbose > 1:
-            print (">>>NUMDAYMONTH>>>", num_days_in_month)
-            print (">>>LASTDAY>>>", last_day)
+        if day == None:
+            day = datetime.datetime.today().day
 
         headers = {
-        #           'Pragma': 'no-cache',
-        #           'Cache-Control': 'no-cache'
+                   'Pragma': 'no-cache',
+                   'Cache-Control': 'no-cache'
                   }
 
+        _date = f"{year}{str(month).zfill(2)}{str(day).zfill(2)}"
+
+        if self.verbose:
+            print(_date)
+
         params = {
-                  'rows' : 300,
-                  'startrow' : '0',
-                  'count' : 'false',
-                  'cmdhash':'89ff07d888efecba391f40eac7d04e9a',
-                  'sqlcmd' : 'rows:hfpr_fcartellino3',
-                  'IDCOMPANY':'000001',
-                  'IDEMPLOY': self.HRauth.idemploy(),
-                  'Anno': "{:d}".format(year),
-                  'Mese': "{:0>2}".format(month),
-                  'Visualiz':'N',
-                  'LaFlexi':'N',
-                  'LaFlexiProg':'N',
-                  'VisDescr':'',
-                  'DADRATIM':'',
-                  'DATTMI':'',
-                  'HHMM':'',
-                  'ImportVoci':'S',
-                  'p_NOEDIT_1':'',
-                  'p_NOEDIT_2':'',
-                  'p_NOEDIT_3':'',
-                  'p_NOEDIT_4':'',
-                  'p_ADMIN':'',
-                  'gCarOri':'N',
-                  'gVismmAtt':'',
-                  'TACART':'N',
-                  'vIDPLANTB':'99999',
-                  'vIDPRESGRP':'',
-                  'NUMERORIGHE':'2',
-                  'StringaCol':'01S&&&02S&&&03S&&&04S&&&05S&&&06S&&&07S&&&08S&&&09N&&&10N&&&11N&&&12N&&&13N&&&14N&&&15N&&&16N&&&17N&&&',
-                  'SchedeLavoro':'N',
-                  'pFILESITO':'',
-                  'pFILGIUS':'0',
-                  'TOTHORD':'S',
-                  'TOTHECC':'',
-                  'TOTFLEX':'',
-                  'ABILITANOTESPESE':'N',
-                  'TIPONOTESPESE':'1',
-                  'ABILITATIMESHEET':'N'
-                 }
+                "pDATAINIZIO"         : _date,
+                "pDATAFINE"           : _date,
+                "pPRIMAVOLTA"         : "N",
+                #"pCOLONNE"            : "Giorno#Anomalie#Anomalie Non Vincolanti#Rilevazioni#Ore Ordinarie#Giustificativi#Richieste#Piano Ferie#Orario#",
+                "pCOLONNE"            : "Giorno%23Anomalie%23Anomalie%20Non%20Vincolanti%23Rilevazioni%23Ore%20Ordinarie%23Giustificativi%23Richieste%23Piano%20Ferie%23Orario%23",
+                "pABILITATS"          : "N",
+                "pABILNS"             : "N",
+                "pTIPONS"             : "1",
+                "pABILSCHE"           : "N",
+                "pTACART"             : "N",
+                "pIMPORTVOCI"         : "S",
+                "pIGFLEX"             : "N",
+                "pIGFLEXPROG"         : "N",
+                "pFLEXHHMM"           : "",
+                "pIGVISQTA"           : "M",
+                "pDATTMI"             : "",
+                "pDADRATIM"           : "S",
+                "pCARORI"             : "N",
+                "pNOVINCO"            : "",
+                "pIGESCMTIM"          : "",
+                "pDISMTIMB"           : "",
+                "pINIBINSERT"         : "N",
+                "pTIMBORIG"           : "N",
+                "pABILVALIDCART"      : "N",
+                "pLIVELLOCART"        : "0",
+                "pMODIFICACARTELLINO" : "N",
+                "pABILPF"             : "S",
+                "pVISORECART"         : "S",
+                "pABILSCHEDULING"     : "N",
+                "pTURNOSCHEDULING"    : "N",
+                "pFLSHOPRE0"          : "N",
+                "m_cID"               : "4aed913a67dafea9c8d7a954aca98878",
+                }
 
-        p = self.session.post(self.sheet_url, cookies=self.cookies)
+        self.HRauth.reset()
+        p = self.HRauth.session().get(self.sheet_url, cookies=self.HRauth.cookies(), params=params)
 
-        p = self.session.post(self.post_url, headers=headers, cookies=self.cookies, params=params)
+        js = re.findall("(?:Function return value:)(.*)",p.text)[0]
 
+        d = json.loads(js)
 
-        d = p.json()['Data'][:last_day]
-        f = p.json()['Fields']
+        if self.verbose > 2:
+            print()
+            for k, v in d.items():
+                print(k, v)
+            print()
 
-        self._check_data(d, year, month, day)
-
-        if day:
-            d = d[day-1]
-        
-        if self.verbose > 1:
-            print ('>>>FIELDS>>>', f)
-            print ('>>>DATA>>>', d)
-
-            #for i, item in enumerate(f):
-            #    print( item, ' = ', d[i])
-
-        json = {'Fields' : f, 'Data' : d}
-
-        return json
+        return d
 
 
     def totalizators(self,
@@ -195,9 +167,9 @@ class HRget(object):
                   'pADMIN':'',
                  }
 
-        p = self.session.post(self.sheet_url, cookies=self.cookies)
+        p = self.HRauth.session().post(self.sheet_url, cookies=self.HRauth.cookies())
 
-        p = self.session.post(self.post_url, headers=headers, cookies=self.cookies, params=params)
+        p = self.HRauth.session().post(self.post_url, headers=headers, cookies=self.HRauth.cookies(), params=params)
 
         d = p.json()['Data'][:-1]
         f = p.json()['Fields']
@@ -220,7 +192,7 @@ class HRget(object):
                   'pANSURNAM' : '',
                  }
 
-        p = self.session.post(self.hash_url, headers=headers, cookies=self.cookies, params=None)
+        p = self.HRauth.session().post(self.hash_url, headers=headers, cookies=self.HRauth.cookies(), params=None)
 
         matches = re.findall("(?<='q_rubrica',).*", p.text)
 
@@ -230,7 +202,7 @@ class HRget(object):
 
         params['cmdhash'] = token
 
-        p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
+        p = self.HRauth.session().post(self.portal_url, headers=headers, cookies=self.HRauth.cookies(), params=params)
 
         try:
            p.json()['Data'][:-1]
@@ -264,7 +236,7 @@ class HRget(object):
                       'pANSURNAM' : '',
                      }
 
-            p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
+            p = self.HRauth.session().post(self.portal_url, headers=headers, cookies=self.HRauth.cookies(), params=params)
 
             try:
                list_phone = p.json()['Data'][:-1]
@@ -310,7 +282,7 @@ class HRget(object):
                   'ANQUERYFILTER':"1",
                  }
 
-        p = self.session.post(self.portal_url, headers=headers, cookies=self.cookies, params=params)
+        p = self.HRauth.session().post(self.portal_url, headers=headers, cookies=self.HRauth.cookies(), params=params)
 
         try:
             d = p.json()['Data'][:-1]
@@ -333,7 +305,7 @@ class HRget(object):
 
     def presence(self):
 
-        p = self.session.post(self.presence_url)
+        p = self.HRauth.session().post(self.presence_url)
 
         csv_data = p.text
 

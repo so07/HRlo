@@ -129,6 +129,7 @@ class HRauth(dict):
        return "{:0>7}".format(str(self['idemploy']))
 
    def login_url(self):
+       #return f"https://{self.host()}/HRPortal/jsp/login.jsp"
        return 'https://' + self.host() + '/HRPortal/servlet/cp_login'
 
    def login(self):
@@ -143,6 +144,15 @@ class HRauth(dict):
 
    def session(self):
        return self._session
+
+   def cookies(self):
+       return self._session.cookies
+
+   def reset(self):
+       self._session = requests.Session()
+       # check login to HR
+       self.login()
+
 
    def post(self):
        p = self.session().get(self.login_url())

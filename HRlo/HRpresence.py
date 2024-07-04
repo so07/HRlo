@@ -39,13 +39,13 @@ class presence (HashedDict):
         s  = "{} : {} {}\n".format(self['name'], self['status'], self['proof'])
         s += "{}\n".format(self['email'])
         s += "{}  {}\n".format(self['phone'], self['company phone'])
-        s = """{} : {}  {} {} {}
+        s = """{} : {} {}
         {}
         {} {}
         {}  @[{}]
         {}  ({})""".format(
             self['name'],
-            self['status'], self['proof'], self['city'], self['state'],
+            self['status'], self['proof'], #self['city'], self['state']
             self['email'],
             self['phone'], self['company phone'],
             self['office'], self['room'],
@@ -53,7 +53,8 @@ class presence (HashedDict):
             )
         if self['proof tomorrow'] or self['city tomorrow'] or self['state tomorrow']:
             s += """
-        TOMORROW: {} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
+        TOMORROW: {}""".format(self['proof tomorrow'])#, self['city tomorrow'], self['state tomorrow'])
+        #TOMORROW: {} {} {}""".format(self['proof tomorrow'], self['city tomorrow'], self['state tomorrow'])
         return s
 
     def is_like (self, key, value):
@@ -143,6 +144,48 @@ class HRpresence (object):
             r = [ l2+l1  for l1, l2 in itertools.zip_longest(l, r) ]
         # return unique lists in list
         return list(k for k,_ in itertools.groupby(sorted(r)))
+
+    def get_workers_from_boss(self, values=[]):
+
+        if isinstance(values, str):
+            values = [values]
+
+        s = set()
+        for boss in values:
+            l = self.get('name', boss)
+            for i in l:
+                s.add(i['name'])
+
+        r = []
+
+        zip_keys = self.get_zip_keys(['boss', 'name'])
+
+        for i in zip_keys:
+            worker_name = i[1]
+
+            boss_name = i[0]
+            boss_list = [boss_name]
+
+            while True or len(boss_list) < 10:
+                try:
+                    worker_from_1st_key = self.get('name', boss_name)[0]
+                except:
+                    break
+
+                if worker_from_1st_key['boss'] == boss_name:
+                    break
+
+                boss_name = worker_from_1st_key['boss']
+                boss_list.append(boss_name)
+
+            #print("BOSSES = ", boss_list)
+
+            if len(set(boss_list).intersection(s)) != 0:
+                r.append(worker_name)
+
+        r.sort()
+        return [ self.get('name', i)[0] for i in r ]
+        #return list(k for k,_ in itertools.groupby(sorted(r)))
 
     def get_zip (self, keys, values=[]):
         r = []

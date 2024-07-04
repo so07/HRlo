@@ -71,7 +71,7 @@ class HRlo(object):
        else:
           json = self.hr_get.get()
 
-       self.days = [ HRday.HRday({'Fields':json['Fields'], 'Data':d}) for d in json['Data'] ]
+       self.days = [ HRday.HRday(d) for d in json ]
 
 
    def day(self, day = datetime.date.today()):

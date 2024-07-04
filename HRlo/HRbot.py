@@ -33,7 +33,7 @@ updater = Updater(token=token)
 
 hr_auth  = HRauth.HRauth()
 hr_get   = HRget.HRget(hr_auth)
-hr_phone = HRphone.HRphone(hr_get.phone())
+#hr_phone = HRphone.HRphone(hr_get.phone())
 hr_today = get_today()
 
 def get_hrlo():

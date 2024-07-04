@@ -3,7 +3,7 @@ import re
 import argparse
 import datetime
 
-from .logs.dayutils import dayutils, sec2str
+from .logs.dayutils import dayutils, sec2str, str2time
 
 
 def to_str(x):

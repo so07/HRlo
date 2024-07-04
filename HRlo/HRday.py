@@ -6,6 +6,7 @@ import argparse
 from .logs import dayutils
 
 from .logs.daylog import DayLog
+from .logs.dayutils import str2time
 
 from . import HRauth
 from . import HRget
@@ -16,14 +17,13 @@ class HRday(DayLog):
 
     re_logs = re.compile('(\d+)-')
 
-    HR_workday                  = datetime.timedelta(hours= 7, minutes=12)
     HR_workday_least            = datetime.timedelta(hours= 6, minutes= 0)
     HR_workday_least_with_lunch = datetime.timedelta(hours= 6, minutes= 0)
 
     HR_login_last   = datetime.timedelta(hours=10, minutes= 0)
 
     # lunch timings
-    HR_lunch_start = datetime.time(hour=12, minute= 0)
+    HR_lunch_start = datetime.time(hour=12, minute= 30)
     HR_lunch_end   = datetime.time(hour=15, minute= 0)
     HR_lunch_time  = datetime.timedelta(hours=0, minutes=30)
 
@@ -86,39 +86,41 @@ class HRday(DayLog):
 
         DayLog.__init__(self)
 
+        self.HR = {}
+
         if not json:
            return
 
-        self.HR = {k: v for k, v in zip(json['Fields'], json['Data'])}
+        date, logs = self.parse_json(json)
+
+        self.HR = {k: v for k, v in json.items()}
+
+        self.anomaly()
+
+        #print(self.HR)
+
+        self.HR_workday = datetime.timedelta(seconds=self._get_hr_real_work_time())
 
         # get data from HR ...
 
         # get number of anomalies from HR
-        self['anomaly'] = int(self.HR['ANOMALIE'])
+        self['anomaly'] = len(self.get_anomaly())
         # get working time to do for HR
         self['HR working time'] = self._get_hr_real_work_time()
         # get uptime/nettime for HR
         self['HR times']['up'], self['HR times']['net'] = self._get_hr_times()
         # get lunch benefits
         self['lunch'] = self.lunch()
-        # get mission benefits
-        self['mission'] = self.mission()
-        # get HR times
-        for k in self.time_hash.keys():
-           self['HR times'][k] = self._get_hr_time(self.time_hash[k])
+        ### # get mission benefits
+        ### self['mission'] = self.mission()
+        ### # get HR times
+        ### for k in self.time_hash.keys():
+        ###    self['HR times'][k] = self._get_hr_time(self.time_hash[k])
 
         # ... end get data from HR
 
 
         # init data for Daylog ...
-
-        # get date from HR
-        date = datetime.datetime.strptime(self.HR['DATA'], "%Y-%m-%d")
-        # get logs from TIMBRATURE of HR
-        logs = self.re_logs.findall( self.HR['TIMBRATURE'] )
-
-        # refine HR logs
-        logs = [ i[0:2] + ':' + i[2:4] for i in logs ]
 
         # add now logs if today and odd logs
         if date.date() == self._now.date() and len(logs)%2:
@@ -136,9 +138,9 @@ class HRday(DayLog):
         # add timenet key to Daylog class
         self['timenet'] = self._get_timenet()
 
-        # update uptime with mission/business trip times
-        for k in ['trip', 'mission', 'bloodletting']:
-           self['uptime'] += self['HR times'][k]
+        ### # update uptime with mission/business trip times
+        ### for k in ['trip', 'mission', 'bloodletting']:
+        ###    self['uptime'] += self['HR times'][k]
 
 
 # __str__ {{{
@@ -161,12 +163,16 @@ class HRday(DayLog):
            s += "{:.<25}".format( "Working day" )
            s += "{}\n".format( self.working() )
 
+       s += "{:.<25}".format( "Logs" )
+       s += ", ".join([str(i.time().strftime("%H:%M")) for i in self.logs()])
+       s += "\n"
+
        # uptime
        s += "{:.<25}".format( "Uptime" )
        s += "{:<10}".format( utils.to_str(self.uptime()) )
-       if not self.is_today():
-          s += " {} ".format( "for HR" )
-          s += "{}".format( utils.to_str(self['HR times']['up']) )
+       ### if not self.is_today():
+       ###    s += " {} ".format( "for HR" )
+       ###    s += "{}".format( utils.to_str(self['HR times']['up']) )
        s += '\n'
 
        # timenet
@@ -183,58 +189,75 @@ class HRday(DayLog):
        s += '\n'
 
        if self.time_to_work():
+           upt = self.uptime()
+           if self.smart_working():
+               upt = self.HR_workday
            # percentage of worked time
            s += "{:.<25}".format( "Worked time in %" )
-           s += "{:.1f}%".format( 100.0*self.uptime().total_seconds()/self.time_to_work() )
+           s += "{:.1f}%".format( 100.0*upt.total_seconds()/self.time_to_work() )
            s += '\n'
 
-       if not self.is_today():
-          s += "{:.<25}".format( "Lunch" )
-          s += "{}\n".format( self['lunch'] )
+       if not self.is_today() and not self.smart_working():
+           s += "{:.<25}".format( "Lunch" )
+           s += "{}\n".format( self['lunch'] )
        # lunch time
-       s += "{:.<25}".format( "Lunch time" )
-       s += "{}".format( utils.to_str(self['time_lunch']) )
-       s += '\n'
+       if not self.smart_working():
+           s += "{:.<25}".format( "Lunch time" )
+           s += "{}".format( utils.to_str(self['time_lunch']) )
+           s += '\n'
 
        # KO time
-       if self['HR times']['ko']:
-          s += "{:.<25}".format( "KO time" )
-          s += "{}\n".format( utils.to_str(self['HR times']['ko']) )
-       if self['time_ko'] and not self['HR times']['ko'] and self.working():
+       ### if self['HR times']['ko']:
+       ###    s += "{:.<25}".format( "KO time" )
+       ###    s += "{}\n".format( utils.to_str(self['HR times']['ko']) )
+       if self['time_ko'] and not self['HR times']['ko'] and self.working() and not self.smart_working():
           s += "{:.<25}".format( "KO time" )
           s += "{}\n".format( utils.to_str(self['time_ko']) )
 
-       # ROL time
-       if self['HR times']['rol']:
-          s += "{:.<25}".format( "ROL time" )
-          s += "{}\n".format( self['HR times']['rol'] )
+       ### # ROL time
+       ### if self['HR times']['rol']:
+       ###    s += "{:.<25}".format( "ROL time" )
+       ###    s += "{}\n".format( self['HR times']['rol'] )
 
-       # DAYOFF time
-       if self['HR times']['dayoff']:
-          s += "{:.<25}".format( "DayOff time" )
-          s += "{}\n".format( self['HR times']['rol'] )
+       ### # DAYOFF time
+       ### if self['HR times']['dayoff']:
+       ###    s += "{:.<25}".format( "DayOff time" )
+       ###    s += "{}\n".format( self['HR times']['rol'] )
 
-       # TRIP time
-       if self['HR times']['trip']:
-          s += "{:.<25}".format( "Business trip time" )
-          s += "{}\n".format( self['HR times']['trip'] )
+       ### # TRIP time
+       ### if self['HR times']['trip']:
+       ###    s += "{:.<25}".format( "Business trip time" )
+       ###    s += "{}\n".format( self['HR times']['trip'] )
 
-       # MISSION time
-       if self['HR times']['mission']:
-          s += "{:.<25}".format( "Mission time" )
-          s += "{}\n".format( self['HR times']['mission'] )
+       ### # MISSION time
+       ### if self['HR times']['mission']:
+       ###    s += "{:.<25}".format( "Mission time" )
+       ###    s += "{}\n".format( self['HR times']['mission'] )
 
-       if self.mission():
-          s += "{:.<25}".format( "Mission" )
-          s += "{}\n".format( self['mission'] )
+       ### if self.mission():
+       ###    s += "{:.<25}".format( "Mission" )
+       ###    s += "{}\n".format( self['mission'] )
 
-       if self.logs():
-          s += "{:.<25}".format( "TimeStamps" )
-          s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self.logs()]) )
+       ### if self.logs():
+       ###    s += "{:.<25}".format( "TimeStamps" )
+       ###    s += "[{}]\n".format( ", ".join([ i.time().strftime("%H:%M") for i in self.logs()]) )
 
        if self.anomaly():
-          s += "{:.<25}".format( "Anomaly" )
+          s += "{:.<25}".format( "Num. Anomaly" )
           s += "{}\n".format( str(self.anomaly()) )
+          s += "{:.<25}".format( "Anomaly" )
+          s += ", ".join(self.get_anomaly())
+          s += "\n"
+
+       # ticket
+       s += "{:.<25}".format( "Ticket" )
+       s += "{}".format( self.lunch() )
+       s += '\n'
+
+       # smart_working
+       s += "{:.<25}".format( "Smart Working" )
+       s += "{}".format( self.smart_working() )
+       s += '\n'
 
        #if not self.working():
        #   return s
@@ -266,30 +289,30 @@ class HRday(DayLog):
        return str(self.date().date())
 
 
-    def __add__(self, other):
+    ### def __add__(self, other):
 
-       a = HRday()
+    ###    a = HRday()
 
-       sum_daylog = DayLog.__add__(self, other)
+    ###    sum_daylog = DayLog.__add__(self, other)
 
-       a['logs']   = sum_daylog.logs()
-       a['date']   = sum_daylog.date()
-       a['uptime'] = sum_daylog.uptime()
+    ###    a['logs']   = sum_daylog.logs()
+    ###    a['date']   = sum_daylog.date()
+    ###    a['uptime'] = sum_daylog.uptime()
 
-       a['timenet'] = self.timenet() + other.timenet()
-       a['anomaly'] = self.anomaly() + other.anomaly()
+    ###    a['timenet'] = self.timenet() + other.timenet()
+    ###    a['anomaly'] = self.anomaly() + other.anomaly()
 
-       a['HR working time'] = self['HR working time'] + other['HR working time']
-       a['lunch'] = self['lunch'] + other['lunch']
-       a['mission'] = self['mission'] + other['mission']
+    ###    a['HR working time'] = self['HR working time'] + other['HR working time']
+    ###    a['lunch'] = self['lunch'] + other['lunch']
+    ###    a['mission'] = self['mission'] + other['mission']
 
-       for k in self['HR times'].keys():
-          a['HR times'][k] = self['HR times'][k] + other['HR times'][k]
+    ###    ### for k in self['HR times'].keys():
+    ###    ###    a['HR times'][k] = self['HR times'][k] + other['HR times'][k]
 
-       for k in self.times_to_add:
-           a[k] = self[k] + other[k]
+    ###    ### for k in self.times_to_add:
+    ###    ###     a[k] = self[k] + other[k]
 
-       return a
+    ###    return a
 
 
     def _init_times (self):
@@ -317,31 +340,28 @@ class HRday(DayLog):
 
        time = self.uptime()
 
-       # times to subtract
-       for k in self.sub_times_to_timenet:
-          time -= self._get_hr_time(self.time_hash[k])
+       ### # times to subtract
+       ### for k in self.sub_times_to_timenet:
+       ###    time -= self._get_hr_time(self.time_hash[k])
 
-       if self.get('time_ko') and self.is_today():
+       ### if self.get('time_ko') and self.is_today():
+       if self.get("time_ko"):
            time -= self['time_ko']
 
-       # times to add
-       for k in self.add_times_to_timenet:
-          time += self._get_hr_time(self.time_hash[k])
+       ### # times to add
+       ### for k in self.add_times_to_timenet:
+       ###    time += self._get_hr_time(self.time_hash[k])
 
        # subtract HR work day
        time -= self.HR_workday
+
+       if self.smart_working():
+           time = datetime.timedelta(0)
 
        # convert in seconds
        time_sec = time.total_seconds()
 
        return time_sec
-
-
-    def _check_hr_work_time(self):
-        """Check HR work time in DESCRORARIO key."""
-
-        if self.HR['DESCRORARIO'].strip() == 'NON IN FORZA':
-            raise Exception("[HRday] ***ERROR***\nWorker not employed in date {}".format(self.date().date()))
 
 
     def _get_hr_work_time(self):
@@ -352,22 +372,16 @@ class HRday(DayLog):
        if self.holiday():
           return 0
 
-       self._check_hr_work_time()
+       #t = str2time(self.HR["OrariEtc"]["OREORD"])
 
-       _time_delta = datetime.timedelta(0)
-
-       if self.HR['ORARIOTEO']:
-           for i, j in zip(*[iter(self.HR['ORARIOTEO'].split(' - '))]*2):
-               _start = datetime.timedelta(hours=int(i[0:2]), minutes=int(i[2:4]))
-               _end   = datetime.timedelta(hours=int(j[0:2]), minutes=int(j[2:4]))
-               _time_delta = _time_delta + (_end - _start)
+       if self.smart_working():
+           t = self.HR["OrariEtc"]["OREORD"]
        else:
-           for i in self.HR['DESCRORARIO'].split():
-               try:
-                   hm = i.split(':')
-                   _time_delta = datetime.timedelta(hours=int(hm[0]), minutes=int(hm[1]))
-               except:
-                   pass
+           t = self.HR["OrariEtc"]["ORARIOTEO"].split("###")[0].split(".")[0]
+
+       t = str2time(t)
+
+       _time_delta = datetime.timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
 
        return _time_delta.total_seconds() # convert to seconds
 
@@ -379,9 +393,9 @@ class HRday(DayLog):
        _hr_work_time_sec = self._get_hr_work_time()
        _hr_work_time     = datetime.timedelta( seconds=_hr_work_time_sec )
 
-       # times to subtract
-       for k in self.sub_times_to_hr:
-          _hr_work_time -= self._get_hr_time(self.time_hash[k])
+       ### # times to subtract
+       ### for k in self.sub_times_to_hr:
+       ###    _hr_work_time -= self._get_hr_time(self.time_hash[k])
 
        _time_sec  = _hr_work_time.total_seconds()
 
@@ -389,11 +403,12 @@ class HRday(DayLog):
 
 
     def _get_hr_times(self):
-       _oreord = self.HR['OREORD']
-       _oreecc = self.HR['OREECC']
+       _oreord = str2time(self.HR["OrariEtc"]['OREORD'])
+       _oreecc = str2time(self.HR["OrariEtc"]['OREECC'])
 
-       _oreord_sec = utils.hr2seconds(_oreord)
-       _oreecc_sec = utils.hr2seconds(_oreecc)
+       _oreord_sec = datetime.timedelta(hours=_oreord.hour, minutes=_oreord.minute, seconds=_oreord.second).total_seconds()
+       _oreecc_sec = datetime.timedelta(hours=_oreecc.hour, minutes=_oreecc.minute, seconds=_oreecc.second).total_seconds()
+
        _oretot_sec = _oreord_sec + _oreecc_sec
 
        _uptime  = datetime.timedelta( seconds=_oretot_sec )
@@ -514,41 +529,54 @@ class HRday(DayLog):
        """Return True if day is an holiday otherwise return False.
           Check if DESCRORARIO key is equal to SABATO, DOMENICA, FESTIVO.
        """
-       _desc = self.HR['DESCRORARIO'].split()[0]
+       _desc = self.HR["OrariEtc"]["DESCORARIO"].split()[0]
        _holiday = ['SABATO', 'DOMENICA', 'FESTIVO']
-       #if [s for s in _holiday if _desc in s]:
        if any(_desc in s for s in _holiday):
            return True
        else:
            return False
 
 
+    def smart_working(self):
+        if "SMART WORKING" in self.HR["OrariEtc"]["DESCORARIO"]:
+            return True
+        else:
+            return False
+
+
+    def get_anomaly(self):
+        a = []
+        for j in self.HR["OrariEtc"]["Anomalie"]:
+            a.append(j["DESCGIUST"])
+        return a
+
+
     def working(self):
-       if not self.logs() and not self.mission() and self.holiday():
+       ### if not self.logs() and not self.mission() and self.holiday():
+       if not self.logs() and self.holiday():
           return False
 
        # check for holiday
        if self.holiday():
            return False
 
-       # check for total rol day
-       if self.rol_total():
-          return False
+       ### # check for total rol day
+       ### if self.rol_total():
+       ###    return False
 
-       # check for times
-       for k in self.time_for_is_working:
-           if self.get_time(k):
-               return False
+       ### # check for times
+       ### for k in self.time_for_is_working:
+       ###     if self.get_time(k):
+       ###         return False
 
        return True
 
 
     def lunch(self):
-       value = self._get_hr_data_from_description('IND. MENSA')
-       if value:
-           return int(float(value))
-       else:
-           return 0
+        for i in self.HR["Giustificativi"]:
+            if "TICKET" in i["DESCGIUST"]:
+                return int(i["QTAORE"].split(":")[0])
+        return 0
 
 
     def mission(self):
@@ -585,6 +613,17 @@ class HRday(DayLog):
           return False
 
 
+    def parse_json(self, j):
+
+        date = datetime.datetime.strptime(j["Giorno"], "%Y-%m-%d")#.date()
+
+        logs = []
+        for i in j["Rilevazioni"]:
+            t = i["TIMBRATURA"]
+            logs.append(f"{t[0:2]}:{t[2:4]}")
+
+        return date, logs
+
 
 
 def main():
@@ -593,6 +632,10 @@ def main():
                                      description='HR day manager',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
+    parser.add_argument('-v', '--verbose',
+                        action="count", default=0,
+                        help="increase verbosity")
+
     # add HRget arguments parser
     HRget.add_parser(parser)
     # add HRauth arguments parser
@@ -600,9 +643,9 @@ def main():
 
     args = parser.parse_args()
 
-
     hr_auth = HRauth.HRauth(**vars(args))
-    hr_get = HRget.HRget(hr_auth, verbose=False)
+    hr_get = HRget.HRget(hr_auth, verbose=args.verbose)
+
     json = hr_get.get(year=args.year, month=args.month, day=args.day)
 
     day = HRday(json)
